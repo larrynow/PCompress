@@ -33,21 +33,21 @@ namespace NCData
 	// TODO tags need modify latter.
 	enum class TagType
 	{
-		FLOAT,	DOUBLE,
-		FIXED32,FIXED64,
-		UINT32,	UINT64,
-		SINT32,	SINT64,
-		BOOL,	BYTE,
+		FIXED32,	FIXED64,
+		SINT32,		SINT64,
+		UINT32,		UINT64,
 
 		UNDEFINED
 	};
 
-	enum class CPPType
+	enum class DataType
 	{
 		FLOAT,	DOUBLE,
 		INT32,	INT64,
 		UINT32,	UINT64,
-		BOOL,	CHAR
+		BOOL,	CHAR,
+		EMBEDDED,
+		UNDEFINED
 	};
 	
 }

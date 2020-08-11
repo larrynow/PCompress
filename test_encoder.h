@@ -34,12 +34,12 @@ namespace NCTest
 				char c;
 			};
 
-			descs.push_back(new FieldDesc(CPPType::INT32, "intV", offsetof(S, i)));
-			descs.push_back(new FieldDesc(CPPType::UINT32, "intV", offsetof(S, u)));
-			descs.push_back(new FieldDesc(CPPType::FLOAT, "floatV", offsetof(S, f)));
-			descs.push_back(new FieldDesc(CPPType::BOOL, "bV", offsetof(S, b)));
-			descs.push_back(new FieldDesc(CPPType::DOUBLE, "dV", offsetof(S, d)));
-			descs.push_back(new FieldDesc(CPPType::CHAR, "cV", offsetof(S, c)));
+			descs.push_back(new FieldDesc(DataType::INT32, "intV", offsetof(S, i)));
+			descs.push_back(new FieldDesc(DataType::UINT32, "intV", offsetof(S, u)));
+			descs.push_back(new FieldDesc(DataType::FLOAT, "floatV", offsetof(S, f)));
+			descs.push_back(new FieldDesc(DataType::BOOL, "bV", offsetof(S, b)));
+			descs.push_back(new FieldDesc(DataType::DOUBLE, "dV", offsetof(S, d)));
+			descs.push_back(new FieldDesc(DataType::CHAR, "cV", offsetof(S, c)));
 
 			for (auto d : descs)
 			{

@@ -22,16 +22,16 @@ namespace NCData
 	class FieldDesc
 	{
 	public:
-		FieldDesc(CPPType t, const std::string& n, uint o)
+		FieldDesc(DataType t, const std::string& n, uint o)
 			: type(t), fieldName(n), offset(o) {}
 
-		CPPType Type() { return type; }
+		DataType Type() { return type; }
 		std::string FieldName() { return fieldName; }
 		uint Offset() { return offset; }
 
 	private:
 
-		CPPType type;
+		DataType type;
 		std::string fieldName;
 
 		uint offset;

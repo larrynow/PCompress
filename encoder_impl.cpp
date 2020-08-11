@@ -26,14 +26,14 @@ bool NCFileIO::EncoderImpl::EncodeField(FieldDesc* p_desc, Byte* src_data)
 
 	switch (p_desc->Type())
 	{
-	NC_CASE_TRANS(CPPType::INT32, 4, IntTrans);
-	NC_CASE_TRANS(CPPType::INT64, 8, IntTrans);
-	NC_CASE_TRANS(CPPType::UINT32, 4, UIntTrans);
-	NC_CASE_TRANS(CPPType::UINT64, 8, UIntTrans);
-	NC_CASE_TRANS(CPPType::FLOAT, 4, FloatTrans);
-	NC_CASE_TRANS(CPPType::DOUBLE, 8, DoubleTrans);
-	NC_CASE_TRANS(CPPType::BOOL, 1, BoolTrans);
-	NC_CASE_TRANS(CPPType::CHAR, 1, CharTrans);
+	NC_CASE_TRANS(DataType::INT32, 4, IntTrans);
+	NC_CASE_TRANS(DataType::INT64, 8, IntTrans);
+	NC_CASE_TRANS(DataType::UINT32, 4, UIntTrans);
+	NC_CASE_TRANS(DataType::UINT64, 8, UIntTrans);
+	NC_CASE_TRANS(DataType::FLOAT, 4, FloatTrans);
+	NC_CASE_TRANS(DataType::DOUBLE, 8, DoubleTrans);
+	NC_CASE_TRANS(DataType::BOOL, 1, BoolTrans);
+	NC_CASE_TRANS(DataType::CHAR, 1, CharTrans);
 	}
 
 	return true;
@@ -96,13 +96,13 @@ void NCFileIO::SIntTrans(Byte* src_data, ByteArray& tr_data)
 void NCFileIO::FloatTrans(Byte* src_data, ByteArray& tr_data)
 {
 	// First 8-bytes for tag.
-	AddTag(TagType::SINT32, tr_data);
+	AddTag(TagType::FIXED32, tr_data);
 	BytesTrans(src_data, tr_data);
 }
 
 void NCFileIO::DoubleTrans(Byte* src_data, ByteArray& tr_data)
 {
-	AddTag(TagType::DOUBLE, tr_data);
+	AddTag(TagType::FIXED64, tr_data);
 	BytesTrans(src_data, tr_data);
 }
 
@@ -111,14 +111,14 @@ void NCFileIO::BoolTrans(Byte* src_data, ByteArray& tr_data)
 	bool b = *((bool*)(src_data));
 	if (!b) return;// False as default, DO NOT encode.
 
-	AddTag(TagType::BOOL, tr_data);
+	AddTag(TagType::UINT32, tr_data);
 
 	VariantEncode(b, tr_data);
 }
 
 void NCFileIO::CharTrans(Byte* src_data, ByteArray& tr_data)
 {
-	AddTag(TagType::BYTE, tr_data);
+	AddTag(TagType::UINT32, tr_data);
 
 	BytesTrans(src_data, tr_data);
 }

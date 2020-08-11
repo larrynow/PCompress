@@ -24,35 +24,32 @@ namespace NCFileIO
 
 	void ParseAnUnit(InputStream& input, NCData::TagType type);
 
-	inline void ParseFloat(InputStream& input) {};
-	//void ParseDouble(FileIO::InputStream& input);
-	//void ParseInt32(FileIO::InputStream& input);
-	//void ParseInt64(FileIO::InputStream& input);
+	inline float ParseFloat(InputStream& input) {};
+	inline double ParseDouble(InputStream& input) {};
+	inline int ParseInt32(InputStream& input) { return 0; };
+	inline NCData::int64 ParseInt64(InputStream& input) { return 0; };
 	inline NCData::uint ParseUInt32(InputStream& input) { return 0; };
-	//void ParseUInt64(FileIO::InputStream& input);
-	//void ParseSInt32(FileIO::InputStream& input);
-	//void ParseSInt64(FileIO::InputStream& input);
+	inline NCData::uint64 ParseUInt64(InputStream& input) { return 0; };
+	inline char ParseChar(InputStream& input) { return 0; };
+	inline bool ParseBool(InputStream& input) { return 0; };
 
-	template<NCData::TagType>
-	void ParseForType(InputStream& input) {};
+	template<NCData::DataType>
+	inline void ParseForType(InputStream& input) {};
 
-	/*	enum class TagType
-	{
-		FLOAT, DOUBLE,
-			INT32, INT64,
-			UINT32, UINT64,
-			SINT32, SINT64,
-
-			UNDEFINED
-	};*/
-
-	//Find a real parser for a TagType.
+	//Find a real parser for a CPP Type.
 	#define TypeParseForward(_Type, _ParserFunc)\
 	template<>\
 	inline void ParseForType<_Type>(NCFileIO::InputStream& input){\
 		_ParserFunc(input);}
 
-	TypeParseForward(NCData::TagType::FLOAT, ParseFloat);
+	TypeParseForward(NCData::DataType::FLOAT, ParseFloat);
+	TypeParseForward(NCData::DataType::DOUBLE, ParseDouble);
+	TypeParseForward(NCData::DataType::INT32, ParseInt32);
+	TypeParseForward(NCData::DataType::INT64, ParseInt64);
+	TypeParseForward(NCData::DataType::UINT32, ParseUInt32);
+	TypeParseForward(NCData::DataType::UINT64, ParseUInt64);
+	TypeParseForward(NCData::DataType::CHAR, ParseChar);
+	TypeParseForward(NCData::DataType::BOOL, ParseBool);
 
 
 }

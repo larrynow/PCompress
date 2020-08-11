@@ -33,11 +33,11 @@ namespace NCTest
 			//NC_PR_CROSS_LINE;
 
 			int offset = 0;
-			descs.push_back(new FieldDesc(CPPType::INT32, "intV", offsetof(S, i)));
-			descs.push_back(new FieldDesc(CPPType::FLOAT, "floatV", offsetof(S, f)));
-			descs.push_back(new FieldDesc(CPPType::BOOL, "bV", offsetof(S, b)));
-			descs.push_back(new FieldDesc(CPPType::INT64, "lV", offsetof(S, i64)));
-			descs.push_back(new FieldDesc(CPPType::CHAR, "cV", offsetof(S, c)));
+			descs.push_back(new FieldDesc(DataType::INT32, "intV", offsetof(S, i)));
+			descs.push_back(new FieldDesc(DataType::FLOAT, "floatV", offsetof(S, f)));
+			descs.push_back(new FieldDesc(DataType::BOOL, "bV", offsetof(S, b)));
+			descs.push_back(new FieldDesc(DataType::INT64, "lV", offsetof(S, i64)));
+			descs.push_back(new FieldDesc(DataType::CHAR, "cV", offsetof(S, c)));
 
 			for (auto d : descs)
 			{

@@ -10,7 +10,7 @@ bool NCFileIO::ParserImpl::Parse()
 	const int tagBit = 0;
 	while (is.Read((Byte*)&tagBit, sizeof(tagBit)))
 	{
-		auto tagType = NCData::TagType::BOOL;
+		auto tagType = NCData::TagType::FIXED32;
 		bool isPacked = IsPacked(tagBit);
 
 		for (uint i = 0; i < (isPacked ? GetPackedUnitsNum(is) : 1); i++)
@@ -31,11 +31,6 @@ void NCFileIO::ParseAnUnit(InputStream& input, NCData::TagType type)
 {
 	using namespace NCData;
 
-	switch (type)
-	{
-		NC_CASE_RETURN(TagType::FLOAT, ParseForType<TagType::FLOAT>(input));
-		NC_CASE_RETURN(TagType::DOUBLE, ParseForType<TagType::DOUBLE>(input));
-	}
 	
 }
 
