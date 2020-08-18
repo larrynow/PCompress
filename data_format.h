@@ -34,7 +34,10 @@ namespace NCData
 	{
 		ByteArray() : size(0), use(0), bytes(nullptr) {}
 		// Ctor with memory allocation.
-		ByteArray(int i) : size(i), bytes(/*TAG MemoryPool*/new Byte[i]), use(0) {}
+		ByteArray(int i) : size(i), bytes(/*TAG MemoryPool*/new Byte[i]), use(0)
+		{
+			memset(bytes, 0, size);
+		}
 		// Ctor with allocated memory.
 		ByteArray(int s, Byte* data) : bytes(data), size(s), use(s) {}
 		~ByteArray() { delete[] bytes; };
