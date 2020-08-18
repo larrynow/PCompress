@@ -4,54 +4,63 @@
 #define _NC_PARSER_IMPL_H_
 
 #include "data_format.h"
+#include "data_desc.h"
+
+#include "file_io.h"
 
 namespace NCFileIO
 {
+	using namespace NCData;
+
 	class InputStream;
 
 	class ParserImpl
 	{
 	public:
-		ParserImpl(InputStream& input) : is(input) {}
-		bool Parse();
-
+		ParserImpl(InputStream& input) : is(input), curSerialNum(0){}
+		bool Parse(Desc* p_root_desc);
 
 	private:
 		InputStream& is;
+
+		// Consume a field at tar with field desc.
+		bool TryConsumeField(NCData::FieldDesc* p_desc, Byte* tar);
+
+		uint curSerialNum;
 	};
 
 	NCData::uint GetPackedUnitsNum(InputStream& input);
 
-	void ParseAnUnit(InputStream& input, NCData::TagType type);
+	// Allocate memery from a descriptor.
+	static Byte* AllocateFromDesc(Desc* p_desc);
+	inline static uint GetDescByteSize(Desc* p_desc);
 
-	inline float ParseFloat(InputStream& input) {};
-	inline double ParseDouble(InputStream& input) {};
-	inline int ParseInt32(InputStream& input) { return 0; };
-	inline NCData::int64 ParseInt64(InputStream& input) { return 0; };
-	inline NCData::uint ParseUInt32(InputStream& input) { return 0; };
-	inline NCData::uint64 ParseUInt64(InputStream& input) { return 0; };
-	inline char ParseChar(InputStream& input) { return 0; };
-	inline bool ParseBool(InputStream& input) { return 0; };
+	void ParseAnUnit(InputStream& input, NCData::TagType type, 
+		Byte* tar, uint byte_size);
 
-	template<NCData::DataType>
-	inline void ParseForType(InputStream& input) {};
+	template<typename T>
+	inline void ReadVariant(InputStream& input, Byte* tar)
+	{
+		//Little endian.
+		T& v = *((T*)tar);
+		Byte b;
+		int offset = 0;
+		while (input.Read(&b, 1))
+		{
+			v = ((b & 0x7F) << (offset*7)) | v ;
+			//std::cout << NC_BITSET (v) << std::endl;
+			if (!(b & 0x80)) break;//DO not have next one.
+			offset++;
+		}
+	}
 
-	//Find a real parser for a CPP Type.
-	#define TypeParseForward(_Type, _ParserFunc)\
-	template<>\
-	inline void ParseForType<_Type>(NCFileIO::InputStream& input){\
-		_ParserFunc(input);}
-
-	TypeParseForward(NCData::DataType::FLOAT, ParseFloat);
-	TypeParseForward(NCData::DataType::DOUBLE, ParseDouble);
-	TypeParseForward(NCData::DataType::INT32, ParseInt32);
-	TypeParseForward(NCData::DataType::INT64, ParseInt64);
-	TypeParseForward(NCData::DataType::UINT32, ParseUInt32);
-	TypeParseForward(NCData::DataType::UINT64, ParseUInt64);
-	TypeParseForward(NCData::DataType::CHAR, ParseChar);
-	TypeParseForward(NCData::DataType::BOOL, ParseBool);
-
-
+	template<typename T>
+	inline void ReadZigzag(InputStream& input, Byte* tar)
+	{
+		ReadVariant<T>(input, tar);
+		T& v = *((T*)tar);
+		v = (-(v & 1) ^ (v >> 1));
+	}
 }
 
 #endif // !_NC_PARSER_IMPL_H_

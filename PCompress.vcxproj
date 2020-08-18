@@ -136,6 +136,7 @@
     <ClInclude Include="parser_impl.h" />
     <ClInclude Include="tag_logic.h" />
     <ClInclude Include="test_base.h" />
+    <ClInclude Include="test_parser.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="encoder_impl.cpp" />

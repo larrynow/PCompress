@@ -10,9 +10,9 @@ NCFileIO::Parser::Parser(const FilePath& _file) : input(_file)
 	pimpl = new ParserImpl(input);
 }
 
-bool NCFileIO::Parser::Parse()
+bool NCFileIO::Parser::Parse(Desc* p_desc)
 {
-	if (!pimpl->Parse())
+	if (!pimpl->Parse(p_desc))
 	{
 		return false;
 	}

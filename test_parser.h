@@ -12,7 +12,7 @@ namespace NCTest
 	{
 		S(int _i, uint _u, float _f, bool _b, double _d, char _c) :
 			i(_i), u(_u), f(_f), b(_b), d(_d), c(_c) {}
-		S() : i(), f(), b(), d(), c() {};
+		S() : i(0), u(0), f(0), b(0), d(0), c(0) {};
 
 		friend std::ostream& operator<<(std::ostream& os, const S& s);
 
@@ -46,14 +46,14 @@ namespace NCTest
 			// Descriptor.
 			Desc descs;
 			descs.push_back(new FieldDesc(DataType::INT32, "intV", offsetof(S, i)));
-			/*descs.push_back(new FieldDesc(DataType::UINT32, "intV", offsetof(S, u)));
+			descs.push_back(new FieldDesc(DataType::UINT32, "uintV", offsetof(S, u)));
 			descs.push_back(new FieldDesc(DataType::FLOAT, "floatV", offsetof(S, f)));
 			descs.push_back(new FieldDesc(DataType::BOOL, "bV", offsetof(S, b)));
 			descs.push_back(new FieldDesc(DataType::DOUBLE, "dV", offsetof(S, d)));
-			descs.push_back(new FieldDesc(DataType::CHAR, "cV", offsetof(S, c)));*/
+			descs.push_back(new FieldDesc(DataType::CHAR, "cV", offsetof(S, c)));
 			std::cout << descs << std::endl;
-
-			S s = S(666, 777, 3.15f, true, 2.54433435, 't');
+			
+			S s = S(-666, 777, 3.15f, true, 2.54433435, 't');
 
 			// Encode.
 			Encoder* encoder =
@@ -66,14 +66,24 @@ namespace NCTest
 			// Parser test.
 			try
 			{
-				/*Parser* parser =
+				auto test = []() {
+					S* r_s = new S();
+					memset(r_s, 0, sizeof(S));
+					InputStream is(("C:\\Users\\Administrator\\Desktop\\binary.txt"));
+					NCFileIO::ReadZigzag<int>(is, (Byte*)r_s);
+					NCFileIO::ReadVariant<int>(is, (Byte*)r_s + offsetof(S, u));
+
+					std::cout << "Var : " << NC_BITSET(r_s->i) << std::endl;
+					std::cout << "Var : " << r_s->i << std::endl;
+					std::cout << "Var : " << NC_BITSET(r_s->u) << std::endl;
+					std::cout << "Var : " << r_s->u << std::endl;
+				};
+				//test();
+
+				Parser* parser =
 					new Parser("C:\\Users\\Administrator\\Desktop\\binary.txt");
-				parser->Parse(&descs);*/
-				Byte* tar = new Byte[4];
-				memset(tar, 0, 4 * sizeof(Byte));
-				InputStream is(("C:\\Users\\Administrator\\Desktop\\binary.txt"));
-				NCFileIO::ReadVariant<int>(is, tar);
-				std::cout << *((int*)tar) << std::endl;
+				parser->Parse(&descs);
+
 			}
 			catch (BadFilePathException e)
 			{

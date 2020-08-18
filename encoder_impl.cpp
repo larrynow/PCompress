@@ -1,5 +1,6 @@
 #include "encoder_impl.h"
 #include "file_io.h"
+#include "tag_logic.h"
 
 #include<bitset>
 
@@ -63,7 +64,7 @@ void NCFileIO::UIntTrans(Byte* src_data, ByteArray& tr_data)
 		BytesTrans(src_data, tr_data);
 	}
 	else if (val > UINT_MAX){
-		AddTag(TagType::UINT64, tr_data);
+		AddTag(TagType::VARIANT64, tr_data);
 		VariantEncode(val, tr_data);
 	}
 	else if (val >= 0x10000000){
@@ -72,7 +73,7 @@ void NCFileIO::UIntTrans(Byte* src_data, ByteArray& tr_data)
 		BytesTrans(src_data, tr_data);
 	}
 	else {
-		AddTag(TagType::UINT32, tr_data);
+		AddTag(TagType::VARIANT32, tr_data);
 		VariantEncode(val, tr_data);
 	}
 
@@ -111,14 +112,14 @@ void NCFileIO::BoolTrans(Byte* src_data, ByteArray& tr_data)
 	bool b = *((bool*)(src_data));
 	if (!b) return;// False as default, DO NOT encode.
 
-	AddTag(TagType::UINT32, tr_data);
+	AddTag(TagType::VARIANT32, tr_data);
 
 	VariantEncode(b, tr_data);
 }
 
 void NCFileIO::CharTrans(Byte* src_data, ByteArray& tr_data)
 {
-	AddTag(TagType::UINT32, tr_data);
+	AddTag(TagType::VARIANT32, tr_data);
 
 	BytesTrans(src_data, tr_data);
 }
@@ -175,5 +176,5 @@ void NCFileIO::ZigzagEncode(int64 value, ByteArray& tr_data)
 
 void NCFileIO::AddTag(TagType type, ByteArray& tr_data)
 {
-
+	//tr_data.bytes[tr_data.use++] = CalTagBits(type);
 }

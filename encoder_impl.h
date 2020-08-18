@@ -58,7 +58,7 @@ namespace NCFileIO
 	inline static void ZigzagEncode(int value, ByteArray& tr_data);
 	inline static void ZigzagEncode(int64 value, ByteArray& tr_data);
 
-	static void AddTag(TagType type, ByteArray& tr_data);
+	inline static void AddTag(TagType type, ByteArray& tr_data);
 };
 
 #endif // !_NC_ENCODER_IMPL_H_

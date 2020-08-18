@@ -1,6 +1,7 @@
 #include"test_file_io.h"
 #include"test_desc.h"
 #include"test_encoder.h"
+#include"test_parser.h"
 
 int main(int argc, char argv[])
 {
@@ -15,6 +16,11 @@ int main(int argc, char argv[])
 	descTest->Test();*/
 
 	// Encoder test.
-	auto encoderTest = new TestEncoder();
-	encoderTest->Test();
+	/*auto encoderTest = new TestEncoder();
+	encoderTest->Test();*/
+
+	// Parser test.
+	auto parseTest = new TestParser();
+	parseTest->Test();
+
 }

@@ -54,6 +54,9 @@
     <ClInclude Include="log.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="test_parser.h">
+      <Filter>头文件\Test</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="file_io.cpp">

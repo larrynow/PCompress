@@ -94,7 +94,7 @@ namespace NCFileIO
 		Parser(const FilePath& _file);
 		
 		// Main Parse Loop;
-		bool Parse();
+		bool Parse(Desc* p_desc);
 
 	private:
 		InputStream input;
