@@ -24,20 +24,32 @@ bool NCFileIO::ParserImpl::Parse(Desc* p_descriptor)
 
 	for (auto cur_field : *p_descriptor)
 	{
-		if (TryConsumeField(cur_field, retData+cur_field->Offset()))
+		try
 		{
-			
+			TryConsumeField(cur_field, retData + cur_field->Offset());
+		}
+		catch (TagSNException & e)
+		{
+			//Skip this field and set it with a default value.
+			//TODO : default value.
+			std::cout << "Skip" << std::endl;
+			continue;
+		}
+		catch (TagFieldTypeException & e)
+		{
+			std::cout <<TagInfoException(e).what() << e.what() << std::endl;
+			std::cout << (int)e.TagT << "---"<< (int)e.DataT << std::endl;
 		}
 	}
 	S* s = (S*)retData;
-	/*std::cout << "Dsplay S." << std::endl;
+	std::cout << "Dsplay S." << std::endl;
 	std::cout << s->i << std::endl;
 	std::cout << s->u << std::endl;
 	std::cout << s->f << std::endl;
 	std::cout << s->b << std::endl;
 	std::cout << s->d << std::endl;
 	std::cout << s->c << std::endl;
-	std::cout << "Dsplay S Finish." << std::endl;*/
+	std::cout << "Dsplay S Finish." << std::endl;
 
 	return false;
 }
@@ -50,7 +62,9 @@ uint NCFileIO::GetPackedUnitsNum(InputStream& input)
 Byte* NCFileIO::AllocateFromDesc(Desc* p_desc)
 {
 	//TODO:MemoryPool;
-	return new Byte[GetDescByteSize(p_desc)];
+	uint byteSize = GetDescByteSize(p_desc);
+	auto ret = new Byte[byteSize];
+	return ret;
 }
 
 uint NCFileIO::GetDescByteSize(Desc* p_desc)
@@ -64,52 +78,53 @@ uint NCFileIO::GetDescByteSize(Desc* p_desc)
 	return cnt;
 }
 
+void NCFileIO::SetDefalutValue(Byte* src, FieldDesc* p_desc)
+{
+	switch (p_desc->Type())
+	{
+	case NCData::DataType::FLOAT:
+	case NCData::DataType::INT32:
+	case NCData::DataType::UINT32:
+		memset(src, 0, sizeof(float));
+		break;
+	case NCData::DataType::DOUBLE:
+	case NCData::DataType::INT64:
+	case NCData::DataType::UINT64:
+		memset(src, 0, sizeof(double));
+		break;
+	case NCData::DataType::BOOL:
+	case NCData::DataType::CHAR:
+		memset(src, 0, sizeof(char));
+		break;
+	case NCData::DataType::EMBEDDED:
+	case NCData::DataType::UNDEFINED:
+	default:
+		break;
+	}
+}
+
 bool NCFileIO::ParserImpl::TryConsumeField(NCData::FieldDesc* p_field, Byte* tar)
 {
-	const Byte tagBits = 0;
-	if (!is.Read((Byte*)&tagBits, sizeof(tagBits))) return false;//IS error;
+	Byte tagBits = 0;
+	if (!is.Read((Byte*)&tagBits, sizeof(tagBits))) 
+		throw FileIOException();//IS error;
 
 	auto tagInfo = GetTagInfo(tagBits);
-	if (curSerialNum != tagInfo.sn) return false;//Wrong field serial number.
-	if (!CheckDataTag(tagInfo.type, p_field->Type())) return false;//Unexpect field type.
+	if (tagInfo.type == TagType::UNDEFINED)//Field set with nothing, use default value.
+	{
+		SetDefalutValue(tar, p_field);
+		return false;
+	}
+	if (curSerialNum != tagInfo.sn)
+		throw TagSNException();//Serial number does not matach.
+	if (!CheckDataTag(tagInfo.type, p_field->Type())) 
+		throw TagFieldTypeException(tagInfo.type, p_field->Type());//Unexpect field type.
 	
 	// Start Parsing.
 	for (size_t i = 0; i < p_field->UnitCount(); i++)
 	{
 		ParseAnUnit(is, tagInfo.type,
 			tar + (i*p_field->UnitByteSize()), p_field->UnitByteSize());
-		switch (p_field->Type())
-		{
-		case NCData::DataType::FLOAT:
-			std::cout << *(float*)tar << std::endl;
-			break;
-		case NCData::DataType::DOUBLE:
-			std::cout << *(double*)tar << std::endl;
-			break;
-		case NCData::DataType::INT32:
-			std::cout << *(int*)tar << std::endl;
-			break;
-		case NCData::DataType::INT64:
-			break;
-		case NCData::DataType::UINT32:
-			std::cout << *(int*)tar << std::endl;
-			break;
-		case NCData::DataType::UINT64:
-			break;
-		case NCData::DataType::BOOL:
-			std::cout << *(bool*)tar << std::endl;
-			break;
-		case NCData::DataType::CHAR:
-			std::cout << *(char*)tar << std::endl;
-			break;
-		case NCData::DataType::EMBEDDED:
-			break;
-		case NCData::DataType::UNDEFINED:
-			break;
-		default:
-			break;
-		}
-
 	}
 
 	return false;
@@ -126,10 +141,21 @@ void NCFileIO::ParseAnUnit(InputStream& input, NCData::TagType type,
 		return;//Fixed encode, do nothing.
 
 	case NCData::TagType::SINT32:
-		ReadZigzag<int>(input, tar);
+		ReadVariant<int>(input, tar);
+		DecodeZigzag<int>(tar);
 		return;
+	case NCData::TagType::F_SINT32:
+		input.Read(tar, byte_size);
+		DecodeZigzag<int>(tar);
+		return;
+
 	case NCData::TagType::SINT64:
-		ReadZigzag<int64>(input, tar);
+		ReadVariant<int64>(input, tar);
+		DecodeZigzag<int64>(tar);
+		return;
+	case NCData::TagType::F_SINT64:
+		input.Read(tar, byte_size);
+		DecodeZigzag<int64>(tar);
 		return;
 
 	case NCData::TagType::VARIANT32:

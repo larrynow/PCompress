@@ -53,48 +53,40 @@ namespace NCTest
 			descs.push_back(new FieldDesc(DataType::CHAR, "cV", offsetof(S, c)));
 			std::cout << descs << std::endl;
 			
-			S s = S(-666, 777, 3.15f, true, 2.54433435, 't');
-
-			// Encode.
-			Encoder* encoder =
-				new Encoder("C:\\Users\\Administrator\\Desktop\\binary.txt");
-			encoder->Encode(&descs, (Byte*)&s);
-			delete encoder;
-			NC_PR_LINE("Encoding finish.");
-			NC_PR_CROSS_LINE;
-
-			// Parser test.
-			try
+			auto testWithS = [&descs](const S& s)
 			{
-				auto test = []() {
-					S* r_s = new S();
-					memset(r_s, 0, sizeof(S));
-					InputStream is(("C:\\Users\\Administrator\\Desktop\\binary.txt"));
-					NCFileIO::ReadZigzag<int>(is, (Byte*)r_s);
-					NCFileIO::ReadVariant<int>(is, (Byte*)r_s + offsetof(S, u));
+				// Encode.
+				Encoder* encoder =
+					new Encoder("C:\\Users\\Administrator\\Desktop\\binary.txt");
+				encoder->Encode(&descs, (Byte*)&s);
+				delete encoder;
+				NC_PR_LINE("Encoding finish.");
+				NC_PR_CROSS_LINE;
 
-					std::cout << "Var : " << NC_BITSET(r_s->i) << std::endl;
-					std::cout << "Var : " << r_s->i << std::endl;
-					std::cout << "Var : " << NC_BITSET(r_s->u) << std::endl;
-					std::cout << "Var : " << r_s->u << std::endl;
-				};
-				//test();
+				// Parser test.
+				try
+				{
+					Parser* parser =
+						new Parser("C:\\Users\\Administrator\\Desktop\\binary.txt");
+					parser->Parse(&descs);
 
-				Parser* parser =
-					new Parser("C:\\Users\\Administrator\\Desktop\\binary.txt");
-				parser->Parse(&descs);
+				}
+				catch (BadFilePathException e)
+				{
+					std::cout << e.what() << std::endl;
+				}
+				NC_PR_LINE("Parser testing pass.");
+			};
 
-			}
-			catch (BadFilePathException e)
-			{
-				std::cout << e.what() << std::endl;
-			}
-			NC_PR_LINE("Parser testing pass.");
+			testWithS(S(-666, 555, 3.15f, true, 2.54433435, 't'));
+			testWithS(S(666, 777, 3.15f, true, 9.00000000, '1'));
+			testWithS(S(0, 999, 3.15f, true, 2.99999999, '!'));
+			testWithS(S(INT_MAX, UINT_MAX, FLT_MAX, false, DBL_MAX, '*'));
+			testWithS(S(INT_MIN, 0, FLT_MIN, false, DBL_MIN, '-'));
+
 		}
 	};
 }
-
-
 
 #endif // !_NC_TEST_PARSER_H_
 

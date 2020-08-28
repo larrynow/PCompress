@@ -52,6 +52,7 @@ namespace NCData
 	{
 		FIXED32,	FIXED64,
 		SINT32,		SINT64,
+		F_SINT32,	F_SINT64,
 		VARIANT32,	VARIANT64,
 
 		UNDEFINED
@@ -125,15 +126,19 @@ namespace NCData
 		switch (t_type)
 		{
 		case NCData::TagType::FIXED32:
-			return d_type == DataType::FLOAT || d_type == DataType::INT32 || d_type == DataType::UINT32;
+			return d_type == DataType::FLOAT || 
+				d_type == DataType::INT32 || d_type == DataType::UINT32 ||
+				d_type == DataType::BOOL || d_type == DataType::CHAR;
 		case NCData::TagType::FIXED64:
 			return d_type == DataType::DOUBLE || d_type == DataType::INT64 || d_type == DataType::UINT64;
 		case NCData::TagType::SINT32:
+		case NCData::TagType::F_SINT32:
 			return d_type == DataType::INT32;
 		case NCData::TagType::SINT64:
+		case NCData::TagType::F_SINT64:
 			return d_type == DataType::INT64;
 		case NCData::TagType::VARIANT32:
-			return d_type == DataType::INT32 || d_type == DataType::UINT32 || d_type == DataType::BOOL || d_type == DataType::CHAR;
+			return d_type == DataType::INT32 || d_type == DataType::UINT32;
 		case NCData::TagType::VARIANT64:
 			return d_type == DataType::INT64 || d_type == DataType::UINT64;
 		case NCData::TagType::UNDEFINED:

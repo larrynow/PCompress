@@ -6,10 +6,10 @@
 
 const int _DATA_BYTES_32 = 4;
 const int _DATA_BYTES_64 = 8;
-const int _DATA_BYTES_SAVED_32 = _DATA_BYTES_32+1;
-const int _DATA_BYTES_SAVED_64 = _DATA_BYTES_64+1;
+const int _DATA_BYTES_SAVED_32 = _DATA_BYTES_32 + 1;//ValueSize+tagSize.
+const int _DATA_BYTES_SAVED_64 = _DATA_BYTES_64 + 1;//ValueSize+tagSize.
 const int _DATA_BYTES_SINGLE = 1;
-const int _DATA_BYTES_SAVED_SINGLE = _DATA_BYTES_SINGLE +1;
+const int _DATA_BYTES_SAVED_SINGLE = _DATA_BYTES_SINGLE + 1;
 
 bool NCFileIO::EncoderImpl::Encode(Desc* p_descriptor, Byte* src_data)
 {
@@ -26,7 +26,7 @@ bool NCFileIO::EncoderImpl::Encode(Desc* p_descriptor, Byte* src_data)
 
 bool NCFileIO::EncoderImpl::EncodeField(FieldDesc* p_desc, Byte* src_data)
 {
-	#define NC_CASE_TRANS(_EnumT, _ArrSize, _Func)\
+#define NC_CASE_TRANS(_EnumT, _ArrSize, _Func)\
 	case(_EnumT):{\
 	ByteArray value(_ArrSize);\
 	_Func(src_data + p_desc->Offset(), value);\
@@ -34,14 +34,14 @@ bool NCFileIO::EncoderImpl::EncodeField(FieldDesc* p_desc, Byte* src_data)
 
 	switch (p_desc->Type())
 	{
-	NC_CASE_TRANS(DataType::INT32,	_DATA_BYTES_SAVED_32,		IntTrans);
-	NC_CASE_TRANS(DataType::INT64,	_DATA_BYTES_SAVED_64,		IntTrans);
-	NC_CASE_TRANS(DataType::UINT32,	_DATA_BYTES_SAVED_32,		UIntTrans);
-	NC_CASE_TRANS(DataType::UINT64,	_DATA_BYTES_SAVED_64,		UIntTrans);
-	NC_CASE_TRANS(DataType::FLOAT,	_DATA_BYTES_SAVED_32,		FloatTrans);
-	NC_CASE_TRANS(DataType::DOUBLE,	_DATA_BYTES_SAVED_64,		DoubleTrans);
-	NC_CASE_TRANS(DataType::BOOL,	_DATA_BYTES_SAVED_SINGLE,	BoolTrans);
-	NC_CASE_TRANS(DataType::CHAR,	_DATA_BYTES_SAVED_SINGLE,	CharTrans);
+		NC_CASE_TRANS(DataType::INT32, _DATA_BYTES_SAVED_32, IntTrans);
+		NC_CASE_TRANS(DataType::INT64, _DATA_BYTES_SAVED_64, IntTrans);
+		NC_CASE_TRANS(DataType::UINT32, _DATA_BYTES_SAVED_32, UIntTrans);
+		NC_CASE_TRANS(DataType::UINT64, _DATA_BYTES_SAVED_64, UIntTrans);
+		NC_CASE_TRANS(DataType::FLOAT, _DATA_BYTES_SAVED_32, FloatTrans);
+		NC_CASE_TRANS(DataType::DOUBLE, _DATA_BYTES_SAVED_64, DoubleTrans);
+		NC_CASE_TRANS(DataType::BOOL, _DATA_BYTES_SAVED_SINGLE, BoolTrans);
+		NC_CASE_TRANS(DataType::CHAR, _DATA_BYTES_SAVED_SINGLE, CharTrans);
 	}
 
 	return true;
@@ -55,7 +55,7 @@ void NCFileIO::EncoderImpl::WriteBytes(Byte* data, int data_bytes)
 void NCFileIO::IntTrans(Byte* src_data, ByteArray& tr_data)
 {
 	bool bSigned = (tr_data.size == _DATA_BYTES_SAVED_32 ?
-		(*((int*)(src_data)) & 0x80000000) : 
+		(*((int*)(src_data)) & 0x80000000) :
 		(*((int64*)(src_data)) & 0x8000000000000000));
 
 	if (bSigned) SIntTrans(src_data, tr_data);
@@ -64,6 +64,14 @@ void NCFileIO::IntTrans(Byte* src_data, ByteArray& tr_data)
 
 void NCFileIO::UIntTrans(Byte* src_data, ByteArray& tr_data)
 {
+	if (tr_data.size == _DATA_BYTES_SAVED_32 ?
+		(*((uint*)(src_data)) == 0) :
+		(*((uint64*)(src_data)) == 0))//Meet defult value, set with nothing but a tag.
+	{
+		AddTag(TagType::UNDEFINED, tr_data);
+		return;
+	}
+
 	// Bytes for int values.
 	uint64 val = (tr_data.size == _DATA_BYTES_SAVED_32 ? 
 		*((uint*)(src_data)) : 
@@ -119,17 +127,19 @@ void NCFileIO::DoubleTrans(Byte* src_data, ByteArray& tr_data)
 void NCFileIO::BoolTrans(Byte* src_data, ByteArray& tr_data)
 {
 	bool b = *((bool*)(src_data));
-	if (!b) return;// False as default, DO NOT encode.
+	if (!b)// False as default, DO NOT encode.
+	{
+		AddTag(TagType::UNDEFINED, tr_data);
+		return;
+	}
 
-	AddTag(TagType::VARIANT32, tr_data);
-
-	VariantEncode(b, tr_data);
+	AddTag(TagType::FIXED32, tr_data);
+	BytesTrans(src_data, tr_data);
 }
 
 void NCFileIO::CharTrans(Byte* src_data, ByteArray& tr_data)
 {
-	AddTag(TagType::VARIANT32, tr_data);
-
+	AddTag(TagType::FIXED32, tr_data);
 	BytesTrans(src_data, tr_data);
 }
 
@@ -170,22 +180,24 @@ void NCFileIO::ZigzagEncode(int value, ByteArray& tr_data)
 	*	  e.g. sb=0 : abs(value)*2,
 	*		   sb=1 : abs(value)*2-1.
 	*/
+	std::cout << "Zigzag from : " << std::bitset<sizeof(int) * 8>(value) << std::endl;
 	int v = (value >> 31) ^ (value << 1);
-	std::cout << "Zigzag to : " << std::bitset<sizeof(int) * 8>(v) << std::endl;
+	std::cout << "To : " << std::bitset<sizeof(int) * 8>(v) << std::endl;
 	UIntTrans((Byte*)&v, tr_data);
 	//parse:(n>>>1)^ -(n&1).
 }
 
 void NCFileIO::ZigzagEncode(int64 value, ByteArray& tr_data)
 {
+	std::cout << "Zigzag from : " << std::bitset<sizeof(int64) * 8>(value) << std::endl;
 	int64 v = (value >> 63) ^ (value << 1);
-	std::cout << "Zigzag to : " << std::bitset<sizeof(int64) * 8>(v) << std::endl;
+	std::cout << "To : " << std::bitset<sizeof(int64) * 8>(v) << std::endl;
 	UIntTrans((Byte*)&v, tr_data);
 }
 
 void NCFileIO::AddTag(TagType type, ByteArray& tr_data)
 {
 	tr_data.bytes[0] |= CalTagBits(type);
-	std::cout << NC_BITSET(tr_data.bytes[0]) << std::endl;
+	std::cout << "Add Tag : " << NC_BITSET(tr_data.bytes[0]) << std::endl;
 	tr_data.use = (tr_data.use == 0 ? 1 : tr_data.use);
 }

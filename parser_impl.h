@@ -12,6 +12,35 @@ namespace NCFileIO
 {
 	using namespace NCData;
 
+	struct TagInfoException : public std::exception
+	{
+		virtual const char* what() const override
+		{
+			return "Tag info error.";
+		}
+	};
+
+	struct TagSNException : public TagInfoException
+	{
+		virtual const char* what() const override
+		{
+			return "Serial number does not match.";
+		}
+	};
+
+	struct TagFieldTypeException : public TagInfoException
+	{
+		TagFieldTypeException(TagType tt, DataType dt)
+			: TagT(tt), DataT(dt) {}
+		virtual const char* what() const override
+		{
+			return "Field type does not match.";
+		}
+
+		TagType TagT;
+		DataType DataT;
+	};
+
 	class InputStream;
 
 	class ParserImpl
@@ -35,6 +64,8 @@ namespace NCFileIO
 	static Byte* AllocateFromDesc(Desc* p_desc);
 	inline static uint GetDescByteSize(Desc* p_desc);
 
+	static void SetDefalutValue(Byte* src, FieldDesc* p_fdesc);
+
 	void ParseAnUnit(InputStream& input, NCData::TagType type, 
 		Byte* tar, uint byte_size);
 
@@ -43,6 +74,7 @@ namespace NCFileIO
 	{
 		//Little endian.
 		T& v = *((T*)tar);
+		memset(&v, 0, sizeof(T));
 		Byte b;
 		int offset = 0;
 		while (input.Read(&b, 1))
@@ -55,11 +87,19 @@ namespace NCFileIO
 	}
 
 	template<typename T>
-	inline void ReadZigzag(InputStream& input, Byte* tar)
+	inline void DecodeZigzag(Byte* tar);
+
+	template<>
+	inline void DecodeZigzag<int>(Byte* tar)
 	{
-		ReadVariant<T>(input, tar);
-		T& v = *((T*)tar);
-		v = (-(v & 1) ^ (v >> 1));
+		uint& v = *((uint*)tar);
+		v = (v >> 1) ^ -static_cast<int>(v & 1);
+	}
+	template<>
+	inline void DecodeZigzag<int64>(Byte* tar)
+	{
+		uint64& v = *((uint64*)tar);
+		v = (v >> 1) ^ -static_cast<int64>(v & 1);
 	}
 }
 
