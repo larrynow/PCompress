@@ -91,23 +91,6 @@ namespace NCData
 			return 0;
 		}
 	}
-
-	/*template<class Type>
-	inline bool NC_CHECK_AMONG(Type l_val, int r_val_num, ...)
-	{
-		bool ret = false;
-		va_list args;
-		va_start(args, r_val_num);
-		while (r_val_num--)
-		{
-			if (l_val == va_arg(args, Type)) {
-				ret = true; 
-				break;
-			}
-		}
-		va_end(args);
-		return ret;
-	}*/
 	
 #define ATTR( attr ) attr
 #define NC_CASE_1(_case) case _case
@@ -117,12 +100,9 @@ namespace NCData
 #define NC_CASE_5(_case, ...) NC_CASE_1(_case): ATTR(NC_CASE_4(__VA_ARGS__))
 #define NC_CASE_6(_case, ...) NC_CASE_1(_case): ATTR(NC_CASE_5(__VA_ARGS__))
 
-
+	// Check if tag type is not complied.
 	inline bool CheckDataTag(TagType t_type, DataType d_type)
 	{
-		#define NC_CHECK_EQUAL(_L_VAL, _R_VAL) _L_VAL == _R_VAL
-		#define NC_CHECK_AMONG(_L_VAL, ...)
-
 		switch (t_type)
 		{
 		case NCData::TagType::FIXED32:
@@ -130,7 +110,8 @@ namespace NCData
 				d_type == DataType::INT32 || d_type == DataType::UINT32 ||
 				d_type == DataType::BOOL || d_type == DataType::CHAR;
 		case NCData::TagType::FIXED64:
-			return d_type == DataType::DOUBLE || d_type == DataType::INT64 || d_type == DataType::UINT64;
+			return d_type == DataType::DOUBLE || 
+				d_type == DataType::INT64 || d_type == DataType::UINT64;
 		case NCData::TagType::SINT32:
 		case NCData::TagType::F_SINT32:
 			return d_type == DataType::INT32;

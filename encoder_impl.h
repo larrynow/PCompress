@@ -40,9 +40,6 @@ namespace NCFileIO
 		void WriteBytes(Byte* data, int data_bytes);
 	};
 
-	//void SaveBytes(OutputStream& os, Byte* data, int data_size) {};
-	//void SaveByte(OutputStream& os, Byte* data);
-
 	static void IntTrans(Byte* src_data, ByteArray& tr_data);
 	static void UIntTrans(Byte* src_data, ByteArray& tr_data);//For positive ints.
 	static void SIntTrans(Byte* src_data, ByteArray& tr_data);//For minnor ints.

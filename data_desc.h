@@ -9,16 +9,6 @@
 
 namespace NCData
 {
-	class Field
-	{
-		virtual void GetValueType() = 0;
-	};
-
-	class FieldInt32
-	{
-		using ValueT = int;
-	};
-
 	//Descriptor for a field.
 	class FieldDesc
 	{
@@ -39,7 +29,6 @@ namespace NCData
 		std::string fieldName;
 
 		uint offset;
-
 		uint unitCount;
 
 	};

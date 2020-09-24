@@ -5,7 +5,12 @@
 #include"data_format.h"
 
 /*
-* TagBit : 8-bits(Byte) info for a field value.
+* TagBit : 8-bits(Byte) info for a field value type.
+* NC_TAG_BIT_64 : if data is 64 bits.
+* NC_TAG_BIT_FIXED : if data is fix encoded.
+* NC_TAG_BIT_SIGNED : if data is singned(for int).
+* NC_TAG_BIT_PACKED : if data is packed(follows with a data array(after a size variant).
+* NC_TAG_BIT_UNDEFINE : if field is not defined(or with default value that don't need send).
 */
 
 #define NC_TAG_BIT			0x00

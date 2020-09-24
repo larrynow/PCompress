@@ -22,10 +22,15 @@ namespace NCFileIO
 
 	struct TagSNException : public TagInfoException
 	{
+		TagSNException(uint es, uint as)
+			: ExpectSN(es), ActualSN(as) {}
 		virtual const char* what() const override
 		{
 			return "Serial number does not match.";
 		}
+
+		uint ExpectSN;
+		uint ActualSN;
 	};
 
 	struct TagFieldTypeException : public TagInfoException
@@ -79,24 +84,19 @@ namespace NCFileIO
 		int offset = 0;
 		while (input.Read(&b, 1))
 		{
-			v = ((b & 0x7F) << (offset*7)) | v ;
-			//std::cout << NC_BITSET (v) << std::endl;
-			if (!(b & 0x80)) break;//DO not have next one.
+			v = T(((b & 0x7F) << (offset*7))) | v ;
+			if (!(b & 0x80)) break;//DO not have next byte.
 			offset++;
 		}
 	}
 
-	template<typename T>
-	inline void DecodeZigzag(Byte* tar);
-
-	template<>
-	inline void DecodeZigzag<int>(Byte* tar)
+	inline void DecodeZigzag32(Byte* tar)
 	{
 		uint& v = *((uint*)tar);
 		v = (v >> 1) ^ -static_cast<int>(v & 1);
 	}
-	template<>
-	inline void DecodeZigzag<int64>(Byte* tar)
+
+	inline void DecodeZigzag64(Byte* tar)
 	{
 		uint64& v = *((uint64*)tar);
 		v = (v >> 1) ^ -static_cast<int64>(v & 1);

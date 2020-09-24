@@ -113,7 +113,6 @@ void NCFileIO::SIntTrans(Byte* src_data, ByteArray& tr_data)
 
 void NCFileIO::FloatTrans(Byte* src_data, ByteArray& tr_data)
 {
-	// First 8-bytes for tag.
 	AddTag(TagType::FIXED32, tr_data);
 	BytesTrans(src_data, tr_data);
 }
@@ -127,7 +126,7 @@ void NCFileIO::DoubleTrans(Byte* src_data, ByteArray& tr_data)
 void NCFileIO::BoolTrans(Byte* src_data, ByteArray& tr_data)
 {
 	bool b = *((bool*)(src_data));
-	if (!b)// False as default, DO NOT encode.
+	if (!b)// False as default, do not encode.
 	{
 		AddTag(TagType::UNDEFINED, tr_data);
 		return;
@@ -145,11 +144,12 @@ void NCFileIO::CharTrans(Byte* src_data, ByteArray& tr_data)
 
 void NCFileIO::BytesTrans(Byte* src_data, ByteArray& tr_data)
 {
-	// Only save bits.
+	// Save every bit.
 	auto ptr = src_data;
 	for (int i = 1; i < tr_data.size; i++)//Without tag(0).
 	{
-		std::cout << "Code byte [BytesTrans] : " << std::bitset<sizeof(Byte) * 8>(*ptr) << std::endl;
+		std::cout << "Code byte [BytesTrans] : " 
+			<< std::bitset<sizeof(Byte) * 8>(*ptr) << std::endl;
 		tr_data.bytes[tr_data.use++] = *(ptr++);
 	}
 	std::cout << "Coding use bytes : " << tr_data.use << std::endl;
@@ -157,6 +157,14 @@ void NCFileIO::BytesTrans(Byte* src_data, ByteArray& tr_data)
 
 void NCFileIO::VariantEncode(uint64 value, ByteArray& tr_data)
 {
+	/*
+	* Variant encode for uint : value.
+	* Each byte saves 7 bits value and 1 bit msb.
+	* value is cut form right-side,
+	* msb defines if there is next byte data.
+	* e.g.	1 000 0001 | 0 000 0001 for 000 0001 000 0001 (129).
+	*		1 000 1001 | 0 000 0110 for 000 0110 000 1001 (666).
+	*/
 	const Byte mask = 0x7F;
 	while (value)
 	{
@@ -164,7 +172,8 @@ void NCFileIO::VariantEncode(uint64 value, ByteArray& tr_data)
 		value >>= 7;
 		if (value) t |= 0x80;// msb = 1.
 		tr_data.bytes[tr_data.use++] = t;
-		std::cout << "Code byte [VariantEncode] : " << std::bitset<sizeof(Byte) * 8>(t) << std::endl;
+		std::cout << "Code byte [VariantEncode] : " 
+			<< std::bitset<sizeof(Byte) * 8>(t) << std::endl;
 	}
 	std::cout << "Coding use bytes : " << tr_data.use << std::endl;
 }

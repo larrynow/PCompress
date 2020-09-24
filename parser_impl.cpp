@@ -30,10 +30,10 @@ bool NCFileIO::ParserImpl::Parse(Desc* p_descriptor)
 		}
 		catch (TagSNException & e)
 		{
-			//Skip this field and set it with a default value.
-			//TODO : default value.
-			std::cout << "Skip" << std::endl;
-			continue;
+			std::cout << TagSNException(e).what() << e.what() << std::endl;
+			std::cout << "Expect [" << e.ExpectSN << "] but got [" 
+				<< e.ActualSN <<"]" << std::endl;
+			break;//Terminate when SN is not matched.
 		}
 		catch (TagFieldTypeException & e)
 		{
@@ -80,6 +80,7 @@ uint NCFileIO::GetDescByteSize(Desc* p_desc)
 
 void NCFileIO::SetDefalutValue(Byte* src, FieldDesc* p_desc)
 {
+	//Set with field default value, all 0 bits filled.
 	switch (p_desc->Type())
 	{
 	case NCData::DataType::FLOAT:
@@ -106,8 +107,8 @@ void NCFileIO::SetDefalutValue(Byte* src, FieldDesc* p_desc)
 bool NCFileIO::ParserImpl::TryConsumeField(NCData::FieldDesc* p_field, Byte* tar)
 {
 	Byte tagBits = 0;
-	if (!is.Read((Byte*)&tagBits, sizeof(tagBits))) 
-		throw FileIOException();//IS error;
+	if (!is.Read((Byte*)&tagBits, sizeof(tagBits)))//IS error;
+		throw FileIOException();
 
 	auto tagInfo = GetTagInfo(tagBits);
 	if (tagInfo.type == TagType::UNDEFINED)//Field set with nothing, use default value.
@@ -115,10 +116,14 @@ bool NCFileIO::ParserImpl::TryConsumeField(NCData::FieldDesc* p_field, Byte* tar
 		SetDefalutValue(tar, p_field);
 		return false;
 	}
-	if (curSerialNum != tagInfo.sn)
-		throw TagSNException();//Serial number does not matach.
-	if (!CheckDataTag(tagInfo.type, p_field->Type())) 
-		throw TagFieldTypeException(tagInfo.type, p_field->Type());//Unexpect field type.
+	if (curSerialNum != tagInfo.sn)//Serial number does not matach.
+		throw TagSNException(curSerialNum, tagInfo.sn);
+	if (!CheckDataTag(tagInfo.type, p_field->Type()))//Unexpect field type.
+	{
+		//Skip this field and set it with a default value.
+		SetDefalutValue(tar, p_field);
+		throw TagFieldTypeException(tagInfo.type, p_field->Type());
+	}
 	
 	// Start Parsing.
 	for (size_t i = 0; i < p_field->UnitCount(); i++)
@@ -135,29 +140,33 @@ void NCFileIO::ParseAnUnit(InputStream& input, NCData::TagType type,
 {
 	switch (type)
 	{
+	//Fixed encode, do nothing.
 	case NCData::TagType::FIXED32:
 	case NCData::TagType::FIXED64:
 		input.Read(tar, byte_size);
-		return;//Fixed encode, do nothing.
+		return;
 
+	//Sint with zigzag.
 	case NCData::TagType::SINT32:
 		ReadVariant<int>(input, tar);
-		DecodeZigzag<int>(tar);
+		DecodeZigzag32(tar);
 		return;
 	case NCData::TagType::F_SINT32:
 		input.Read(tar, byte_size);
-		DecodeZigzag<int>(tar);
+		DecodeZigzag32(tar);
 		return;
 
+	//Sint64 with zigzag.
 	case NCData::TagType::SINT64:
 		ReadVariant<int64>(input, tar);
-		DecodeZigzag<int64>(tar);
+		DecodeZigzag64(tar);
 		return;
 	case NCData::TagType::F_SINT64:
 		input.Read(tar, byte_size);
-		DecodeZigzag<int64>(tar);
+		DecodeZigzag64(tar);
 		return;
-
+	
+	//Variant encoded.
 	case NCData::TagType::VARIANT32:
 		ReadVariant<int>(input, tar);
 		return;
