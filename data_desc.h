@@ -33,7 +33,43 @@ namespace NCData
 
 	};
 	
-	using Desc = std::vector<FieldDesc*>;
+	class Desc
+	{
+	public:
+		Desc() {}
+
+		~Desc()
+		{
+			for (auto f_d : field_descs)
+				delete f_d;
+		}
+
+		void push_back(FieldDesc* p_fd)
+		{
+			field_descs.push_back(p_fd);
+		}
+
+		auto begin()
+		{
+			return field_descs.begin();
+		}
+		auto end()
+		{
+			return field_descs.end();
+		}
+
+		auto clear()
+		{
+			for (auto f_d : field_descs)
+				delete f_d;
+			field_descs.clear();
+		}
+
+	private:
+		std::vector<FieldDesc*> field_descs;
+	};
+
+	//using Desc = std::vector<FieldDesc*>;
 
 	inline std::ostream& operator<<(std::ostream& os, Desc& desc)
 	{

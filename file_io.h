@@ -40,7 +40,6 @@ namespace NCFileIO
 		InputStream(const FilePath& file)
 		{
 			ifs.open(file.c_str(), std::ios::in | std::ios::binary);
-			if (!ifs) throw BadFilePathException(file);
 		}
 
 		bool Read(Byte* target, int size)
@@ -66,8 +65,7 @@ namespace NCFileIO
 		// From a file to outputStream;
 		OutputStream(const FilePath& file)
 		{
-			os.open(file.c_str(), std::ios::out | std::ios::binary);
-			if (!os) throw BadFilePathException(file);
+			os.open(file.c_str(), std::ios::out | std::ios::binary | std::ios::app);
 		}
 
 		bool Write(Byte* src, int size)
@@ -115,5 +113,14 @@ namespace NCFileIO
 		EncoderImpl* pimpl;
 	};
 
+	inline bool CheckFile(const std::string& file)
+	{
+		return std::ifstream(file).good();
+	}
+
+	inline void ClearFile(const std::string& file)
+	{
+		std::ofstream().open(file, std::ios::out | std::ios::binary);
+	}
 }
 #endif // !_NC_FILE_IO_H_

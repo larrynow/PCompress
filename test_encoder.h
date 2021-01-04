@@ -24,7 +24,7 @@ namespace NCTest
 			{
 				S(int _i, uint _u, float _f, bool _b, double _d, char _c) :
 					i(_i), u(_u), f(_f), b(_b), d(_d), c(_c) {}
-				S() : i(), f(), b(), d(), c() {};
+				S() : i(), u(), f(), b(), d(), c() {};
 
 				int i;
 				uint u;

@@ -2,6 +2,7 @@
 #include"test_desc.h"
 #include"test_encoder.h"
 #include"test_parser.h"
+#include"test_compress.h"
 
 int main(int argc, char argv[])
 {
@@ -20,7 +21,10 @@ int main(int argc, char argv[])
 	encoderTest->Test();*/
 
 	// Parser test.
-	auto parseTest = new TestParser();
-	parseTest->Test();
+	/*auto parseTest = new TestParser();
+	parseTest->Test();*/
 
+	// Compress test.
+	auto compressTest = new TestCompress();
+	compressTest->Test();
 }

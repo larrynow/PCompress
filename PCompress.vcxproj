@@ -129,6 +129,9 @@
     <ClInclude Include="encoder_impl.h" />
     <ClInclude Include="file_io.h" />
     <ClInclude Include="log.h" />
+    <ClInclude Include="neuron_logic.h" />
+    <ClInclude Include="neuron_representation.h" />
+    <ClInclude Include="test_compress.h" />
     <ClInclude Include="test_encoder.h" />
     <ClInclude Include="test_desc.h" />
     <ClInclude Include="test_file_io.h" />
@@ -142,6 +145,8 @@
     <ClCompile Include="encoder_impl.cpp" />
     <ClCompile Include="file_io.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="neuron_compress.cpp" />
+    <ClCompile Include="neuron_logic.cpp" />
     <ClCompile Include="parser_impl.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
