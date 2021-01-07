@@ -16,6 +16,9 @@
     <Filter Include="头文件\Test">
       <UniqueIdentifier>{122af25d-ff76-4003-a08f-620cbe90e9db}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Internal">
+      <UniqueIdentifier>{883a6158-5f11-4f3a-951a-55dd94a1ada0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="file_io.h">
@@ -66,6 +69,27 @@
     <ClInclude Include="test_compress.h">
       <Filter>头文件\Test</Filter>
     </ClInclude>
+    <ClInclude Include="utils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="global_setting.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="spline_curve.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="branch.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="math.h">
+      <Filter>头文件\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="branch_tree.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="test_spline.h">
+      <Filter>头文件\Test</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="file_io.cpp">
@@ -84,6 +108,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="neuron_compress.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="neuron_decompresscpp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="spline_curve.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="branch_tree.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

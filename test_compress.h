@@ -4,6 +4,9 @@
 
 #include "test_base.h"
 #include "neuron_compress.h"
+#include "neuron_logic.h"
+#include "file_io.h"
+
 namespace NCTest
 {
 	class TestCompress : public TestBase
@@ -14,8 +17,26 @@ namespace NCTest
 		{
 			using namespace NCNeuron;
 
-			std::string neuron_file("C://Projects//PCompress//neurons//Cell-16-2_1.CNG.swc");
-			NeuronCompressor::Compress(neuron_file, 1);
+			int compress_level = 2;
+
+			std::string neuron_name = "AA0029.swc_rep";
+			//std::string neuron_name = "Cell-16-2_1.CNG";
+			std::string neuron_file(".//neurons//"+neuron_name+".swc");
+			NeuronCompressor::Compress(neuron_file, compress_level);
+
+			// Decompress test.
+			NeuronTree* nt = nullptr;
+			try
+			{
+				nt = NeuronCompressor::Decompress(".//neurons//"
+					+neuron_name+".nsc");
+			}
+			catch (NCFileIO::BadFilePathException& e)
+			{
+				std::cout << "File error!" << e.what()<< std::endl;
+			}
+			SaveSWC(*nt, ".//neurons//"+neuron_name+"_new2.swc");
+			delete nt;
 		}
 
 	};

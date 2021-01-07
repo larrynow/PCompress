@@ -3,10 +3,14 @@
 #include"test_encoder.h"
 #include"test_parser.h"
 #include"test_compress.h"
+#include"global_setting.h"
+#include"test_spline.h"
 
 int main(int argc, char argv[])
 {
 	using namespace NCTest;
+
+	GlobalSetting::SetDecimalPrecision(6);
 
 	// File io test.
 	/*auto fileioTest = new TestFileIO();
@@ -27,4 +31,8 @@ int main(int argc, char argv[])
 	// Compress test.
 	auto compressTest = new TestCompress();
 	compressTest->Test();
+
+	// Spline test.
+	/*auto spline_tset = TestSpline();
+	spline_tset.Test();*/
 }

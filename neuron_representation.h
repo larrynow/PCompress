@@ -5,6 +5,7 @@
 #include<vector>
 #include<map>
 #include"data_desc.h"
+#include"branch_tree.h"
 
 namespace NCNeuron
 {
@@ -19,10 +20,11 @@ namespace NCNeuron
 		int parent;
 	};
 
+	// A vector for swc nodes.
 	using NeuronTree = std::vector<NeuronSWCNode>;
 
-	const static int BRANCH_LATENT_SIZ = 5;
-	struct NeuronBranchNode
+	// Latent node in vector.
+	struct NeuronLatentNode
 	{
 		int id;
 		int p_id;
@@ -33,7 +35,22 @@ namespace NCNeuron
 		int v_direction[3];
 	};
 
-	using NeuronBranchTree = std::vector<NeuronBranchNode>;
+	// A vector for latent nodes.
+	using NeuronLatentTree = std::vector<NeuronLatentNode>;
+
+	// Spline node in vector.
+	struct NeuronSplineNode
+	{
+		int id;
+		int p_id;
+		int type;
+		float radius;
+
+		NCSplineCurve::SCParams params;
+	};
+
+	// A vector for spline nodes.
+	using NeuronSplineTree = std::vector<NeuronSplineNode>;
 
 	class NeuronDescriptor
 	{
@@ -56,6 +73,12 @@ namespace NCNeuron
 			return instance.neuron_branch_desc;
 		}
 
+		static Desc& GetSplineDescriptor()
+		{
+			static NeuronDescriptor instance;
+			return instance.neuron_spline_desc;
+		}
+
 	private:
 		NeuronDescriptor()
 		{
@@ -68,21 +91,55 @@ namespace NCNeuron
 			neuron_SWC_desc.push_back(new FieldDesc(DataType::FLOAT, "radius", offsetof(NeuronSWCNode, radius)));
 			neuron_SWC_desc.push_back(new FieldDesc(DataType::INT32, "parent", offsetof(NeuronSWCNode, parent)));
 
+			/*
+			struct NeuronSplineNode
+			{
+				int id;
+				int p_id;
+				int type;
+				float radius;
+
+				NCSplineCurve::SCParams params;
+			};
+			*/
+			neuron_spline_desc.clear();
+			neuron_spline_desc.push_back(new FieldDesc(DataType::INT32, "id", offsetof(NeuronSplineNode, id)));
+			neuron_spline_desc.push_back(new FieldDesc(DataType::INT32, "p_id", offsetof(NeuronSplineNode, p_id)));
+			neuron_spline_desc.push_back(new FieldDesc(DataType::INT32, "type", offsetof(NeuronSplineNode, type)));
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "radius", offsetof(NeuronSplineNode, radius)));
+			
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramX.x", offsetof(NeuronSplineNode, params.XParams.x)));
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramX.y", offsetof(NeuronSplineNode, params.XParams.y)));
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramX.z", offsetof(NeuronSplineNode, params.XParams.z)));
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramX.w", offsetof(NeuronSplineNode, params.XParams.w)));
+			
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramY.x", offsetof(NeuronSplineNode, params.YParams.x)));
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramY.y", offsetof(NeuronSplineNode, params.YParams.y)));
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramY.z", offsetof(NeuronSplineNode, params.YParams.z)));
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramY.w", offsetof(NeuronSplineNode, params.YParams.w)));
+
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramZ.x", offsetof(NeuronSplineNode, params.ZParams.x)));
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramZ.y", offsetof(NeuronSplineNode, params.ZParams.y)));
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramZ.z", offsetof(NeuronSplineNode, params.ZParams.z)));
+			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramZ.w", offsetof(NeuronSplineNode, params.ZParams.w)));
+
 			neuron_branch_desc.clear();
-			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "id", offsetof(NeuronBranchNode, id)));
-			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "p_id", offsetof(NeuronBranchNode, p_id)));
+			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "id", offsetof(NeuronLatentNode, id)));
+			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "p_id", offsetof(NeuronLatentNode, p_id)));
 			for (int i = 0; i < BRANCH_LATENT_SIZ; i++)
-				neuron_branch_desc.push_back(new FieldDesc(DataType::FLOAT, std::string("latent_")+std::to_string(i), offsetof(NeuronBranchNode, branch_latent[i])));
-			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "direction_x", offsetof(NeuronBranchNode, direction[0])));
-			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "direction_y", offsetof(NeuronBranchNode, direction[1])));
-			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "direction_z", offsetof(NeuronBranchNode, direction[2])));
-			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "v_direction_x", offsetof(NeuronBranchNode, v_direction[0])));
-			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "v_direction_y", offsetof(NeuronBranchNode, v_direction[1])));
-			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "v_direction_z", offsetof(NeuronBranchNode, v_direction[2])));
+				neuron_branch_desc.push_back(new FieldDesc(DataType::FLOAT, std::string("latent_")+std::to_string(i), offsetof(NeuronLatentNode, branch_latent[i])));
+			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "direction_x", offsetof(NeuronLatentNode, direction[0])));
+			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "direction_y", offsetof(NeuronLatentNode, direction[1])));
+			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "direction_z", offsetof(NeuronLatentNode, direction[2])));
+			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "v_direction_x", offsetof(NeuronLatentNode, v_direction[0])));
+			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "v_direction_y", offsetof(NeuronLatentNode, v_direction[1])));
+			neuron_branch_desc.push_back(new FieldDesc(DataType::INT32, "v_direction_z", offsetof(NeuronLatentNode, v_direction[2])));
+		
 		}
 	
 		Desc neuron_SWC_desc;
 		Desc neuron_branch_desc;
+		Desc neuron_spline_desc;
 	};
 
 }

@@ -52,7 +52,7 @@ namespace NCFileIO
 	{
 	public:
 		ParserImpl(InputStream& input) : is(input), curSerialNum(0){}
-		bool Parse(Desc* p_root_desc);
+		bool Parse(Desc* p_root_desc, Byte* target);
 
 	private:
 		InputStream& is;
@@ -65,11 +65,7 @@ namespace NCFileIO
 
 	NCData::uint GetPackedUnitsNum(InputStream& input);
 
-	// Allocate memery from a descriptor.
-	static Byte* AllocateFromDesc(Desc* p_desc);
-	inline static uint GetDescByteSize(Desc* p_desc);
-
-	static void SetDefalutValue(Byte* src, FieldDesc* p_fdesc);
+	
 
 	void ParseAnUnit(InputStream& input, NCData::TagType type, 
 		Byte* tar, uint byte_size);

@@ -66,9 +66,11 @@ namespace NCTest
 				// Parser test.
 				try
 				{
+					S* s = new S();
 					Parser* parser =
 						new Parser("C:\\Users\\Administrator\\Desktop\\binary.txt");
-					parser->Parse(&descs);
+					parser->Parse(&descs, (Byte*)&s);
+					delete s;
 
 				}
 				catch (BadFilePathException e)

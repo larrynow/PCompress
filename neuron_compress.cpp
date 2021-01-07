@@ -24,7 +24,7 @@ void NCNeuron::NeuronCompressor::Compress(const std::string& neuron_file, int le
 		}
 		case 2:
 		{
-			auto ntc_file = neuron_file.substr(0, neuron_file.find_last_of('.')) + ".ntc";
+			auto ntc_file = neuron_file.substr(0, neuron_file.find_last_of('.')) + ".nsc";
 			Level2Compress(neuron, ntc_file);
 			break;
 		}
@@ -54,14 +54,10 @@ void NCNeuron::NeuronCompressor::Level1Compress(const NeuronTree& neuron, const 
 	delete siz_desc;
 
 	auto& desc = NeuronDescriptor::GetSWCDescriptor();
-
-	int count = 0;
 	for (auto& node : neuron)
 	{
-		std::cout << "Encode " << count++ << std::endl;
 		encoder->Encode(&desc, (Byte*)&node);
 	}
-
 	delete encoder;
 
 	std::cout << "Encode finish." << std::endl;
@@ -69,6 +65,31 @@ void NCNeuron::NeuronCompressor::Level1Compress(const NeuronTree& neuron, const 
 
 void NCNeuron::NeuronCompressor::Level2Compress(const NeuronTree& neuron, const std::string& out_file)
 {
+	using namespace NCFileIO;
+
+	ClearFile(out_file);
+	Encoder* encoder = new Encoder(out_file);
+
+	// Get Spline tree.
+	auto b_tree = GetBranchTree<NCNeuron::NodeParam::SPLINE>(neuron);
+	FitBranchTree(b_tree);
+	auto tree = GetSplineTree(b_tree);
+
+	// Encode tree size;
+	auto siz = tree.size();
+	auto siz_desc = new Desc();
+	siz_desc->push_back(new FieldDesc(DataType::INT32, "size", 0));
+	encoder->Encode(siz_desc, (Byte*)&siz);
+	delete siz_desc;
+
+	auto& desc = NeuronDescriptor::GetSplineDescriptor();
+	for (auto& node : tree)
+	{
+		encoder->Encode(&desc, (Byte*)&node);
+	}
+	delete encoder;
+
+	std::cout << "Encode finish." << std::endl;
 
 }
 

@@ -1,6 +1,7 @@
 #include "encoder_impl.h"
 #include "file_io.h"
 #include "tag_logic.h"
+#include "utils.h"
 
 #include<bitset>
 
@@ -10,6 +11,8 @@ const int _DATA_BYTES_SAVED_32 = _DATA_BYTES_32 + 1;//ValueSize+tagSize.
 const int _DATA_BYTES_SAVED_64 = _DATA_BYTES_64 + 1;//ValueSize+tagSize.
 const int _DATA_BYTES_SINGLE = 1;
 const int _DATA_BYTES_SAVED_SINGLE = _DATA_BYTES_SINGLE + 1;
+
+using namespace NCData;
 
 bool NCFileIO::EncoderImpl::Encode(Desc* p_descriptor, Byte* src_data)
 {
@@ -148,11 +151,11 @@ void NCFileIO::BytesTrans(Byte* src_data, ByteArray& tr_data)
 	auto ptr = src_data;
 	for (int i = 1; i < tr_data.size; i++)//Without tag(0).
 	{
-		std::cout << "Code byte [BytesTrans] : " 
-			<< std::bitset<sizeof(Byte) * 8>(*ptr) << std::endl;
+		DebugLog("Code byte [BytesTrans] : ", 
+			std::bitset<sizeof(Byte) * 8>(*ptr));
 		tr_data.bytes[tr_data.use++] = *(ptr++);
 	}
-	std::cout << "Coding use bytes : " << tr_data.use << std::endl;
+	DebugLog("Coding use bytes : ", tr_data.use);
 }
 
 void NCFileIO::VariantEncode(uint64 value, ByteArray& tr_data)
@@ -172,10 +175,10 @@ void NCFileIO::VariantEncode(uint64 value, ByteArray& tr_data)
 		value >>= 7;
 		if (value) t |= 0x80;// msb = 1.
 		tr_data.bytes[tr_data.use++] = t;
-		std::cout << "Code byte [VariantEncode] : " 
-			<< std::bitset<sizeof(Byte) * 8>(t) << std::endl;
+		DebugLog("Code byte [VariantEncode] : ",
+			std::bitset<sizeof(Byte) * 8>(t));
 	}
-	std::cout << "Coding use bytes : " << tr_data.use << std::endl;
+	DebugLog("Coding use bytes : ", tr_data.use);
 }
 
 void NCFileIO::ZigzagEncode(int value, ByteArray& tr_data)
@@ -189,24 +192,24 @@ void NCFileIO::ZigzagEncode(int value, ByteArray& tr_data)
 	*	  e.g. sb=0 : abs(value)*2,
 	*		   sb=1 : abs(value)*2-1.
 	*/
-	std::cout << "Zigzag from : " << std::bitset<sizeof(int) * 8>(value) << std::endl;
+	DebugLog("Zigzag from : ", std::bitset<sizeof(int) * 8>(value));
 	int v = (value >> 31) ^ (value << 1);
-	std::cout << "To : " << std::bitset<sizeof(int) * 8>(v) << std::endl;
+	DebugLog("To : ", std::bitset<sizeof(int) * 8>(v));
 	UIntTrans((Byte*)&v, tr_data);
 	//parse:(n>>>1)^ -(n&1).
 }
 
 void NCFileIO::ZigzagEncode(int64 value, ByteArray& tr_data)
 {
-	std::cout << "Zigzag from : " << std::bitset<sizeof(int64) * 8>(value) << std::endl;
+	DebugLog("Zigzag from : ", std::bitset<sizeof(int64) * 8>(value));
 	int64 v = (value >> 63) ^ (value << 1);
-	std::cout << "To : " << std::bitset<sizeof(int64) * 8>(v) << std::endl;
+	DebugLog("To : ", std::bitset<sizeof(int64) * 8>(v));
 	UIntTrans((Byte*)&v, tr_data);
 }
 
 void NCFileIO::AddTag(TagType type, ByteArray& tr_data)
 {
 	tr_data.bytes[0] |= CalTagBits(type);
-	std::cout << "Add Tag : " << NC_BITSET(tr_data.bytes[0]) << std::endl;
+	DebugLog("Add Tag : ", NC_BITSET(tr_data.bytes[0]));
 	tr_data.use = (tr_data.use == 0 ? 1 : tr_data.use);
 }

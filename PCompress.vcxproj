@@ -22,33 +22,33 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{7876E921-FCDE-4053-BDA3-5812ADDC66A7}</ProjectGuid>
     <RootNamespace>PCompress</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
     <ProjectName>NeuronCompress</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -124,13 +124,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="branch.h" />
+    <ClInclude Include="branch_tree.h" />
     <ClInclude Include="data_desc.h" />
     <ClInclude Include="data_format.h" />
     <ClInclude Include="encoder_impl.h" />
     <ClInclude Include="file_io.h" />
+    <ClInclude Include="global_setting.h" />
     <ClInclude Include="log.h" />
+    <ClInclude Include="math.h" />
     <ClInclude Include="neuron_logic.h" />
     <ClInclude Include="neuron_representation.h" />
+    <ClInclude Include="spline_curve.h" />
+    <ClInclude Include="test_spline.h" />
     <ClInclude Include="test_compress.h" />
     <ClInclude Include="test_encoder.h" />
     <ClInclude Include="test_desc.h" />
@@ -140,14 +146,18 @@
     <ClInclude Include="tag_logic.h" />
     <ClInclude Include="test_base.h" />
     <ClInclude Include="test_parser.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="branch_tree.cpp" />
     <ClCompile Include="encoder_impl.cpp" />
     <ClCompile Include="file_io.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="neuron_compress.cpp" />
+    <ClCompile Include="neuron_decompresscpp.cpp" />
     <ClCompile Include="neuron_logic.cpp" />
     <ClCompile Include="parser_impl.cpp" />
+    <ClCompile Include="spline_curve.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

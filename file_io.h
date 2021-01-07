@@ -92,7 +92,7 @@ namespace NCFileIO
 		Parser(const FilePath& _file);
 		
 		// Main Parse Loop;
-		bool Parse(Desc* p_desc);
+		bool Parse(Desc* p_desc, Byte* taregt);
 
 	private:
 		InputStream input;
@@ -122,5 +122,11 @@ namespace NCFileIO
 	{
 		std::ofstream().open(file, std::ios::out | std::ios::binary);
 	}
+
+	// Allocate memery from a descriptor.
+	Byte* AllocateFromDesc(Desc* p_desc);
+	inline uint GetDescByteSize(Desc* p_desc);
+
+	void SetDefalutValue(Byte* src, FieldDesc* p_fdesc);
 }
 #endif // !_NC_FILE_IO_H_
