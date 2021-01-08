@@ -31,7 +31,7 @@ NCNeuron::NeuronTree* NCNeuron::NeuronCompressor::Decompress(
 		}
 
 	}
-	else if (suffix == ".nlc")
+	else if (suffix == ".ncc")
 	{
 		if (auto ret_data = Level3Decompress(com_file))
 		{
@@ -129,11 +129,52 @@ NCNeuron::NeuronTree* NCNeuron::NeuronCompressor::Level2Decompress(
 	delete parser;
 	delete siz;
 
-	return new NeuronTree(GetNeuronTree(*sp_tree));
+	auto ret_tree = new NeuronTree(GetNeuronTree(*sp_tree));
+	delete sp_tree;
+
+	return ret_tree;
 }
 
 NCNeuron::NeuronTree* NCNeuron::NeuronCompressor::Level3Decompress(
 	const std::string & com_file)
 {
-	return nullptr;
+	using namespace NCFileIO;
+
+	Parser* parser = new Parser(com_file);
+
+	// Parse neuron size;
+	int* siz = new int;
+	auto siz_desc = new Desc();
+	siz_desc->push_back(new FieldDesc(DataType::INT32, "size", 0));
+	try
+	{
+		parser->Parse(siz_desc, (Byte*)siz);
+	}
+	catch (std::exception & e)
+	{
+		std::cout << e.what() << e.what() << std::endl;
+	}
+	delete siz_desc;
+
+	NeuronCompactSplineTree* csp_tree = new NeuronCompactSplineTree(*siz);
+	// Parse neuron tree;
+	auto& desc = NeuronDescriptor::GetCompactSplineDescriptor();
+	for (int i = 0; i < *siz; i++)
+	{
+		try
+		{
+			parser->Parse(&desc, (Byte*) & (csp_tree->at(i)));
+		}
+		catch (std::exception & e)
+		{
+			std::cout << e.what() << e.what() << std::endl;
+		}
+	}
+	delete parser;
+	delete siz;
+
+	auto sp_tree = UnCompactSplineTree(*csp_tree);
+	delete csp_tree;
+
+	return new NeuronTree(GetNeuronTree(sp_tree));
 }

@@ -17,6 +17,7 @@ void NCSplineCurve::FitCurve(const NCNeuron::Branch& branch, SCParams& ret_param
 		float tangent_0 = (nb[1].x - nb[0].x) / step;
 		float tangent_n = (nb[N - 1].x - nb[N - 2].x) / step;
 		ret_param.XParams = VEC4({ nb[0].x, nb[N - 1].x, tangent_0, tangent_n });
+		DebugLog("Tangent : ", tangent_0, " ", tangent_n);
 	}
 
 	// Y.
@@ -24,6 +25,7 @@ void NCSplineCurve::FitCurve(const NCNeuron::Branch& branch, SCParams& ret_param
 		float tangent_0 = (nb[1].y - nb[0].y) / step;
 		float tangent_n = (nb[N - 1].y - nb[N - 2].y) / step;
 		ret_param.YParams = VEC4({ nb[0].y, nb[N - 1].y, tangent_0, tangent_n });
+		DebugLog("Tangent : ", tangent_0, " ", tangent_n);
 	}
 
 	// Z.
@@ -31,6 +33,7 @@ void NCSplineCurve::FitCurve(const NCNeuron::Branch& branch, SCParams& ret_param
 		float tangent_0 = (nb[1].z - nb[0].z) / step;
 		float tangent_n = (nb[N - 1].z - nb[N - 2].z) / step;
 		ret_param.ZParams = VEC4({ nb[0].z, nb[N - 1].z, tangent_0, tangent_n });
+		DebugLog("Tangent : ", tangent_0, " ", tangent_n);
 	}
 }
 

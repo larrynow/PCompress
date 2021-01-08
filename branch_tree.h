@@ -13,8 +13,8 @@ namespace NCNeuron
 	enum NodeParam
 	{
 		EMPTY=0,
-		LATENT=1,
-		SPLINE=2
+		SPLINE=1,
+		COMPACTSPLINE=2
 	};
 
 	template<int>
@@ -41,22 +41,6 @@ namespace NCNeuron
 	struct BranchTree<NodeParam::EMPTY>
 	{
 		std::vector<BranchTreeNodeBase*> soma_branches;
-	};
-
-	///////////////////////////////
-	// Branch Tree with a latent.
-
-	const static int BRANCH_LATENT_SIZ = 5;
-
-	struct BranchLatentNode : BranchTreeNodeBase
-	{
-		float branch_latent[BRANCH_LATENT_SIZ];
-	};
-
-	template<>
-	struct BranchTree<NodeParam::LATENT>
-	{
-		std::vector<BranchLatentNode*> soma_branches;
 	};
 
 	//////////////////////////////////

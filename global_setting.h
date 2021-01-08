@@ -42,7 +42,7 @@ public:
 
 	static float& GetSamplePointStep()
 	{
-		static float step = 5.f;// Curve error threshold.
+		static float step = 10.f;// Curve error threshold.
 		return step;
 	}
 	

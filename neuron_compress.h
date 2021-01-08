@@ -25,7 +25,6 @@ namespace NCNeuron
 		static NeuronTree* Level1Decompress(const std::string& com_file);
 		static NeuronTree* Level2Decompress(const std::string& com_file);
 		static NeuronTree* Level3Decompress(const std::string& com_file);
-
 	};
 }
 

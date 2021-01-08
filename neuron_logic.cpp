@@ -7,6 +7,7 @@
 #include<stack>
 #include"global_setting.h"
 #include"utils.h"
+#include<unordered_set>
 
 template<class T>
 std::vector<T> splitStr(const std::string& in, const std::string& delim)
@@ -250,13 +251,14 @@ NCNeuron::NeuronTree NCNeuron::GetNeuronTree(NeuronSplineTree& tree)
 		Branch temp;
 		auto sample_num = static_cast<int>(
 			GetBranchLength(node.params) / GlobalSetting::GetSamplePointStep());
-		sample_num = std::max(sample_num, 5);
+		sample_num = std::max(sample_num, 3);
 		NCSplineCurve::RemakeCurve(node.params, temp, sample_num);
 		auto& start_point = temp[0];// Start point overlap with prev branch's last point.
 		auto target_point = VEC3(ret_tree[parent_id-1].x, 
 			ret_tree[parent_id-1].y, ret_tree[parent_id-1].z);
 		auto transform = target_point - start_point;
 
+		// From second point.
 		for (std::size_t i = 1; i < temp.size(); i++)
 		{
 			auto& point = temp[i] + transform;
@@ -265,6 +267,64 @@ NCNeuron::NeuronTree NCNeuron::GetNeuronTree(NeuronSplineTree& tree)
 			parent_id = cur_id++;
 		}
 		node_last_id_map[node.id] = cur_id - 1;
+	}
+
+	return ret_tree;
+}
+
+NCNeuron::NeuronCompactSplineTree NCNeuron::CompactSplineTree(const NeuronSplineTree& tree)
+{
+	auto ret_tree = NCNeuron::NeuronCompactSplineTree();
+
+	int sb_index = tree.size();// Start position to push soma-branch param.
+	auto sb_vec = NCNeuron::NeuronCompactSplineTree();// Position to put soma-branches.
+	for (auto& node : tree)
+	{
+		if (node.p_id == -1)// Is soma_branch.
+		{
+			auto c_node = CompactSplineNode(node);
+			c_node.p_id = sb_index;
+			ret_tree.push_back(c_node);
+
+			auto sb_node = CompactSplineNode();
+			sb_node.id = sb_index++;
+			sb_node.p_id = -1;
+			sb_node.type = node.type;
+			sb_node.radius = node.radius;
+			sb_node.params = CompactSplineNode::CompactSplineParam_SomaBranch(node.params);
+			sb_vec.push_back(sb_node);
+		}
+		else
+		{
+			auto param = CompactSplineNode(node);
+			ret_tree.push_back(param);
+		}
+	}
+
+	// Collect soma_branches.
+	for (auto& node : sb_vec)
+	{
+		ret_tree.push_back(node);
+	}
+
+	return ret_tree;
+}
+
+NCNeuron::NeuronSplineTree NCNeuron::UnCompactSplineTree(const NeuronCompactSplineTree& tree)
+{
+	auto ret_tree = NCNeuron::NeuronSplineTree();
+	for (auto& node : tree)
+	{
+		if (node.p_id == -1) {
+			continue;
+		}
+
+		ret_tree.push_back({
+			node.id, 
+			tree.at(node.p_id).p_id==-1 ? -1 : node.p_id,
+			node.type, node.radius,
+			CompactSplineNode::UnCompactSplineParam(node.params, tree.at(node.p_id).params)
+			});
 	}
 
 	return ret_tree;

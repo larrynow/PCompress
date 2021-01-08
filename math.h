@@ -497,6 +497,7 @@ namespace NCMath
 
 
 	inline float GetRadian(float angle) { return angle * PI / 180.0f; };
+	inline float GetAngle(float radian) { return radian * 180.f / PI; };
 }
 
 #endif // !_NC_MATH_H_
