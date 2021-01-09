@@ -2,6 +2,7 @@
 #include "file_io.h"
 #include "neuron_representation.h"
 #include "neuron_logic.h"
+#include "utils.h"
 
 void NCNeuron::NeuronCompressor::Compress(const std::string& neuron_file, int level)
 {
@@ -74,6 +75,7 @@ void NCNeuron::NeuronCompressor::Level2Compress(const NeuronTree& neuron, const 
 	auto b_tree = GetBranchTree<NCNeuron::NodeParam::SPLINE>(neuron);
 	FitBranchTree(b_tree);
 	auto tree = GetSplineTree(b_tree);
+	delete b_tree;
 
 	////Code to test int tangent-representation.
 	//auto trans = [](float tan_v)
@@ -127,22 +129,32 @@ void NCNeuron::NeuronCompressor::Level3Compress(const NeuronTree& neuron, const 
 	Encoder* encoder = new Encoder(out_file);
 
 	// Get Spline tree.
-	auto b_tree = GetBranchTree<NCNeuron::NodeParam::SPLINE>(neuron);
-	FitBranchTree(b_tree);
-	auto tree = CompactSplineTree(GetSplineTree(b_tree));
+	auto b_tree = GetBranchTree<NCNeuron::NodeParam::COMPACTSPLINE>(neuron);
+	CompactBranchTree(b_tree);
+	auto tree = GetCompactSplineTree(b_tree);
+	delete b_tree;
 
 	// Encode tree size;
 	auto siz = tree.size();
 	auto siz_desc = new Desc();
 	siz_desc->push_back(new FieldDesc(DataType::INT32, "size", 0));
 	encoder->Encode(siz_desc, (Byte*)&siz);
-	delete siz_desc;
 
-	auto& desc = NeuronDescriptor::GetCompactSplineDescriptor();
+	auto& spline_desc = NeuronDescriptor::GetSplineDescriptor();
+	auto& param_desc = NeuronDescriptor::GetCompactParamDescriptor();
 	for (auto& node : tree)
 	{
-		encoder->Encode(&desc, (Byte*)&node);
+		encoder->Encode(&spline_desc, (Byte*)&node);// Spline node part.
+		encoder->Encode(siz_desc, (Byte*)&node.param_size);// Param sequence size.
+		if (node.param_size != 0)
+		{
+			for (int i = 0; i < node.param_size; i++)
+			{// Every Param.
+				encoder->Encode(&param_desc, (Byte*)&(node.param_sequences[i]));
+			}
+		}
 	}
+	delete siz_desc;
 	delete encoder;
 
 	std::cout << "Encode finish." << std::endl;

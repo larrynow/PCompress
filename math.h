@@ -261,6 +261,11 @@ namespace NCMath
 			return VEC4(x / scaleFactor, y / scaleFactor, z / scaleFactor, w / scaleFactor);
 		}
 
+		friend std::ostream& operator<<(std::ostream& os, const VEC4 _vec)
+		{
+			return os << _vec.x << "," << _vec.y << "," << _vec.z << "," << _vec.w << std::endl;
+		}
+
 		union {
 			struct { float x, y, z, w; };
 			float m[4];

@@ -154,16 +154,28 @@ NCNeuron::NeuronTree* NCNeuron::NeuronCompressor::Level3Decompress(
 	{
 		std::cout << e.what() << e.what() << std::endl;
 	}
-	delete siz_desc;
 
 	NeuronCompactSplineTree* csp_tree = new NeuronCompactSplineTree(*siz);
+
 	// Parse neuron tree;
-	auto& desc = NeuronDescriptor::GetCompactSplineDescriptor();
+	auto& sp_desc = NeuronDescriptor::GetSplineDescriptor();
+	auto& param_desc = NeuronDescriptor::GetCompactParamDescriptor();
 	for (int i = 0; i < *siz; i++)
 	{
 		try
 		{
-			parser->Parse(&desc, (Byte*) & (csp_tree->at(i)));
+			parser->Parse(&sp_desc, (Byte*) &(csp_tree->at(i)));
+			parser->Parse(siz_desc, (Byte*) &(csp_tree->at(i).param_size));
+			if (csp_tree->at(i).param_size != 0)
+			{
+				csp_tree->at(i).param_sequences =
+					new BranchCompactSplineNode::CompactParam[csp_tree->at(i).param_size];
+				for (int j = 0; j < csp_tree->at(i).param_size; j++)
+				{
+					parser->Parse(&param_desc, 
+						(Byte*) & (csp_tree->at(i).param_sequences[j]));
+				}
+			}
 		}
 		catch (std::exception & e)
 		{
@@ -172,9 +184,10 @@ NCNeuron::NeuronTree* NCNeuron::NeuronCompressor::Level3Decompress(
 	}
 	delete parser;
 	delete siz;
+	delete siz_desc;
 
-	auto sp_tree = UnCompactSplineTree(*csp_tree);
+	auto ret_tree = new NeuronTree(GetNeuronTree(*csp_tree));
 	delete csp_tree;
 
-	return new NeuronTree(GetNeuronTree(sp_tree));
+	return ret_tree;
 }

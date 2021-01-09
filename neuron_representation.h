@@ -26,6 +26,11 @@ namespace NCNeuron
 	// Spline node in vector.
 	struct NeuronSplineNode
 	{
+		NeuronSplineNode() = default;
+
+		NeuronSplineNode(int i, int p, int t, float r, NCSplineCurve::SCParams pa) : 
+			id(i), p_id(p), type(t), radius(r), params(pa)
+		{}
 		int id;
 		int p_id;
 		int type;
@@ -38,79 +43,40 @@ namespace NCNeuron
 	using NeuronSplineTree = std::vector<NeuronSplineNode>;
 
 	// A compact expression of spline params.
-	struct CompactSplineNode
+	struct CompactSplineNode : public NeuronSplineNode
 	{
-		CompactSplineNode() :
-			id(0), p_id(0), type(0), radius(0.f), params() {}
+		CompactSplineNode() : NeuronSplineNode(),
+			param_size(0), param_sequences(nullptr) {}
 
-		CompactSplineNode(const NeuronSplineNode& node):
-			id(node.id), p_id(node.p_id), type(node.type), radius(node.radius),
-			params(CompactSplineParam(node.params))
-		{}
-
-		int id;
-		int p_id;
-		int type;
-		float radius;
-
-		struct CompactParam
+		CompactSplineNode(int id, int p_id, int type, float radius,
+			NCSplineCurve::SCParams params,
+			int p_size, BranchCompactSplineNode::CompactParam* p_sequences) : 
+			NeuronSplineNode(id, p_id, type, radius, params), 
+			param_size(p_size), param_sequences(nullptr)
 		{
-			VEC3 endPoint;// Only reserve end point.
-			int angle_int_x;// A angle to get a tangent.
-			int angle_int_y;// A angle to get a tangent.
-			int angle_int_z;// A angle to get a tangent.
-		} params;
-		
-		static CompactParam CompactSplineParam(const NCSplineCurve::SCParams& p)
-		{
-			return CompactParam({
-					VEC3(p.XParams.y, p.YParams.y, p.ZParams.y), 
-					ReserveAngle(GetAngle(atan(p.XParams.w))),
-					ReserveAngle(GetAngle(atan(p.YParams.w))),
-					ReserveAngle(GetAngle(atan(p.ZParams.w)))
-				});
-		}
-
-		static CompactParam CompactSplineParam_SomaBranch(const NCSplineCurve::SCParams& p)
-		{
-			return CompactParam({
-					VEC3(p.XParams.x, p.YParams.x, p.ZParams.x),
-					ReserveAngle(GetAngle(atan(p.XParams.z))),
-					ReserveAngle(GetAngle(atan(p.YParams.z))),
-					ReserveAngle(GetAngle(atan(p.ZParams.z)))
-				});
-		}
-
-		static NCSplineCurve::SCParams UnCompactSplineParam(const CompactParam& p,
-			const CompactParam& parent_p)
-		{
-			return NCSplineCurve::SCParams({
-					VEC4(parent_p.endPoint.x, p.endPoint.x, 
-					tan(GetRadian(parent_p.angle_int_x)), tan(GetRadian(p.angle_int_x))),
-					VEC4(parent_p.endPoint.y, p.endPoint.y,
-					tan(GetRadian(parent_p.angle_int_y)), tan(GetRadian(p.angle_int_y))),
-					VEC4(parent_p.endPoint.z, p.endPoint.z,
-					tan(GetRadian(parent_p.angle_int_z)), tan(GetRadian(p.angle_int_z))),
-				});
-		}
-
-		// Save angle(float) with a decimal precision.
-		static int ReserveAngle(float angle, int precision=0)
-		{
-			/*
-			Angle can be represent as a int.
-			Angle : precision : 1бу: integer part of angle.
-				    precision : 0.1бу: integer part of (angle*10).
-					...
-			*/
-			for (int i = 0; i < precision; i++)
+			if (param_size != 0)
 			{
-				angle *= 10;
+				param_sequences =
+					new BranchCompactSplineNode::CompactParam[param_size];
+				memcpy(param_sequences, p_sequences, 
+					param_size*sizeof(BranchCompactSplineNode::CompactParam));
 			}
+		};
 
-			return static_cast<int>(angle);
+		CompactSplineNode(const CompactSplineNode& node) :
+			CompactSplineNode(node.id, node.p_id, node.type, node.radius,
+				node.params, node.param_size, node.param_sequences) {}
+
+		~CompactSplineNode()
+		{
+			if (param_sequences) {
+				delete[] param_sequences;
+				param_sequences = nullptr;
+			}
 		}
 
+		int param_size;
+		BranchCompactSplineNode::CompactParam* param_sequences;
 	};
 
 	using NeuronCompactSplineTree = std::vector<CompactSplineNode>;
@@ -140,9 +106,9 @@ namespace NCNeuron
 			return GetInstance().neuron_spline_desc;
 		}
 
-		static Desc& GetCompactSplineDescriptor()
+		static Desc& GetCompactParamDescriptor()
 		{
-			return GetInstance().neuron_compact_spline_desc;
+			return GetInstance().compact_param_desc;
 		}
 
 
@@ -191,46 +157,34 @@ namespace NCNeuron
 			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramZ.w", offsetof(NeuronSplineNode, params.ZParams.w)));
 
 			/*
-			struct CompactSplineNode{
-				int id;
-				int p_id;
-				int type;
-				float radius;
+			struct CompactParam
+			{
+				VEC3 position;
 
-				struct CompactParam
-				{
-					VEC3 endPoint;// Only reserve end point.
-					int angle_int[3];// A angle to get a tangent.
-				} params;
-			}
+				int angle_int_x;// A angle to get a tangent.
+				int angle_int_y;// A angle to get a tangent.
+				int angle_int_z;// A angle to get a tangent.
+			};
 			*/
-			neuron_compact_spline_desc.clear();
-			neuron_compact_spline_desc.push_back(
-				new FieldDesc(DataType::INT32, "id", offsetof(CompactSplineNode, id)));
-			neuron_compact_spline_desc.push_back(
-				new FieldDesc(DataType::INT32, "p_id", offsetof(CompactSplineNode, p_id)));
-			neuron_compact_spline_desc.push_back(
-				new FieldDesc(DataType::INT32, "type", offsetof(CompactSplineNode, type)));
-			neuron_compact_spline_desc.push_back(
-				new FieldDesc(DataType::FLOAT, "radius", offsetof(CompactSplineNode, radius)));
-			neuron_compact_spline_desc.push_back(
-				new FieldDesc(DataType::FLOAT, "params.endPoint.x", offsetof(CompactSplineNode, params.endPoint.x)));
-			neuron_compact_spline_desc.push_back(
-				new FieldDesc(DataType::FLOAT, "params.endPoint.y", offsetof(CompactSplineNode, params.endPoint.y)));
-			neuron_compact_spline_desc.push_back(
-				new FieldDesc(DataType::FLOAT, "params.endPoint.z", offsetof(CompactSplineNode, params.endPoint.z)));
-			neuron_compact_spline_desc.push_back(
-				new FieldDesc(DataType::INT32, "angle_int_x", offsetof(CompactSplineNode, params.angle_int_x)));
-			neuron_compact_spline_desc.push_back(
-				new FieldDesc(DataType::INT32, "angle_int_y", offsetof(CompactSplineNode, params.angle_int_y)));
-			neuron_compact_spline_desc.push_back(
-				new FieldDesc(DataType::INT32, "angle_int_z", offsetof(CompactSplineNode, params.angle_int_z)));
-
+			compact_param_desc.clear();
+			compact_param_desc.push_back(new FieldDesc(DataType::FLOAT, "position.x", 
+				offsetof(BranchCompactSplineNode::CompactParam, position.x)));
+			compact_param_desc.push_back(new FieldDesc(DataType::FLOAT, "position.y",
+				offsetof(BranchCompactSplineNode::CompactParam, position.y)));
+			compact_param_desc.push_back(new FieldDesc(DataType::FLOAT, "position.z",
+				offsetof(BranchCompactSplineNode::CompactParam, position.z)));
+			
+			compact_param_desc.push_back(new FieldDesc(DataType::FLOAT, "angle_x", 
+				offsetof(BranchCompactSplineNode::CompactParam, angle_int_x)));
+			compact_param_desc.push_back(new FieldDesc(DataType::FLOAT, "angle_y",
+				offsetof(BranchCompactSplineNode::CompactParam, angle_int_y)));
+			compact_param_desc.push_back(new FieldDesc(DataType::FLOAT, "angle_z",
+				offsetof(BranchCompactSplineNode::CompactParam, angle_int_z)));
 		}
 	
 		Desc neuron_SWC_desc;
 		Desc neuron_spline_desc;
-		Desc neuron_compact_spline_desc;
+		Desc compact_param_desc;
 	};
 
 }

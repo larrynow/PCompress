@@ -3,7 +3,6 @@
 #include<fstream>
 #include<sstream>
 #include<regex>
-#include<queue>
 #include<stack>
 #include"global_setting.h"
 #include"utils.h"
@@ -125,79 +124,6 @@ bool NCNeuron::SaveSWC(const NeuronTree & n, const std::string & out_file)
 	return true;
 }
 
-template<>
-NCNeuron::BranchTree<NCNeuron::NodeParam::SPLINE>* NCNeuron::GetBranchTree(
-	const NCNeuron::NeuronTree& neuron)
-{
-	using namespace NCNeuron;
-
-	NCNeuron::BranchTree<NCNeuron::NodeParam::SPLINE>* ret =
-		new NCNeuron::BranchTree<NCNeuron::NodeParam::SPLINE>();
-
-	//calculate a node's branch num;
-	std::vector<int> branches;
-	branches = std::vector<int>(neuron.size(), 0);
-	for (int i = 0; i < neuron.size(); i++)
-	{
-		if (neuron[i].parent < 0) {
-			continue;//root
-		}
-		branches[neuron[i].parent-1]++;
-	}
-
-	std::queue<int> q;
-	for (int i = 0; i < neuron.size(); i++)
-	{
-		if (branches[i] == 0)
-			q.push(i);
-	}
-	std::map<int, int> visited;//Map root to child.
-	std::map<int, BranchSplineNode*> node_map;//Map id to its node.
-	while (!q.empty()) {
-		auto current = q.front();
-		BranchSplineNode* pre = nullptr;
-
-		while (current != 0)
-		{
-			if (node_map.count(current))
-			{
-				if (pre != node_map.at(current)->l_child)// From different half.
-					node_map.at(current)->r_child = pre;
-				break;
-			}
-			DebugLog("Current node:", current);
-
-			BranchSplineNode* node = new BranchSplineNode();
-			node_map[current] = node;
-
-			node->branch.push_back({ neuron[current].x, neuron[current].y, neuron[current].z });
-			node->type = neuron[current].type;
-			//Get root in branch.
-			auto root = neuron[current].parent - 1;
-			for (; branches[root] < 2 && root != 0; root = neuron[root].parent - 1)
-			{
-				node->branch.push_back({ neuron[root].x, neuron[root].y, neuron[root].z });
-			}
-			node->branch.push_back({ neuron[root].x, neuron[root].y, neuron[root].z });
-			std::reverse(node->branch.begin(), node->branch.end());
-			
-			node->l_child = pre;
-
-			if (root==0) ret->soma_branches.push_back(node);
-
-			current = root;
-			pre = node;
-			
-		}
-		q.pop();
-	}
-
-	DebugLog("size:", node_map.size());
-
-	return ret;
-
-}
-
 NCNeuron::NeuronSplineTree NCNeuron::GetSplineTree(
 	NCNeuron::BranchTree<NCNeuron::NodeParam::SPLINE>* branch_tree)
 {
@@ -272,60 +198,182 @@ NCNeuron::NeuronTree NCNeuron::GetNeuronTree(NeuronSplineTree& tree)
 	return ret_tree;
 }
 
-NCNeuron::NeuronCompactSplineTree NCNeuron::CompactSplineTree(const NeuronSplineTree& tree)
+NCNeuron::NeuronCompactSplineTree NCNeuron::GetCompactSplineTree(
+	NCNeuron::BranchTree<NCNeuron::NodeParam::COMPACTSPLINE>* branch_tree)
 {
-	auto ret_tree = NCNeuron::NeuronCompactSplineTree();
+	NeuronCompactSplineTree ret_tree;
 
-	int sb_index = tree.size();// Start position to push soma-branch param.
-	auto sb_vec = NCNeuron::NeuronCompactSplineTree();// Position to put soma-branches.
+	std::map<BranchCompactSplineNode*, int> id_map;
+	for (auto root : branch_tree->soma_branches)// Start from each soma-branch.
+	{
+		int pre_id = -1;// Soma.
+		std::stack<BranchCompactSplineNode*> s;
+		auto cur = root;
+
+		while (cur != nullptr || !s.empty())
+		{
+			while (cur != nullptr)
+			{
+				ret_tree.push_back({ static_cast<int>(ret_tree.size()), pre_id,
+					cur->type, cur->radius, cur->params, 
+					cur->seqeunce_length, cur->sequence });
+				s.push(cur);
+				id_map[cur] = ret_tree.size() - 1;
+				pre_id = ret_tree.size() - 1;
+				cur = static_cast<BranchCompactSplineNode*>(cur->l_child);
+			}
+			if (!s.empty())
+			{
+				BranchCompactSplineNode* top = s.top();
+				pre_id = id_map.at(top);
+				s.pop();
+				cur = static_cast<BranchCompactSplineNode*>(top->r_child);
+			}
+		}
+	}
+
+	return ret_tree;
+}
+
+NCNeuron::NeuronTree NCNeuron::GetNeuronTree(NCNeuron::NeuronCompactSplineTree& tree)
+{
+	NCNeuron::NeuronTree ret_tree;
+
+	int cur_id = 1;
+	int parent_id = -1;
+	// Put soma.
+	ret_tree.push_back({ cur_id++, 1, 0.f, 0.f, 0.f, 1.f, parent_id });
+
+	std::map<int, int> node_last_id_map;// Mark last sample-point-id of a node.
 	for (auto& node : tree)
 	{
-		if (node.p_id == -1)// Is soma_branch.
-		{
-			auto c_node = CompactSplineNode(node);
-			c_node.p_id = sb_index;
-			ret_tree.push_back(c_node);
+		if (node.p_id == -1) parent_id = 1;
+		else parent_id = node_last_id_map.at(node.p_id);
 
-			auto sb_node = CompactSplineNode();
-			sb_node.id = sb_index++;
-			sb_node.p_id = -1;
-			sb_node.type = node.type;
-			sb_node.radius = node.radius;
-			sb_node.params = CompactSplineNode::CompactSplineParam_SomaBranch(node.params);
-			sb_vec.push_back(sb_node);
+		if (node.param_size == 0)
+		{// Without any compact param. Directly create a branch.
+			Branch temp;
+			auto sample_num = static_cast<int>(
+				GetBranchLength(node.params) / GlobalSetting::GetSamplePointStep());
+			sample_num = std::max(sample_num, 3);
+			NCSplineCurve::RemakeCurve(node.params, temp, sample_num);
+
+			// Transform.
+			auto& start_point = temp[0];// Start point overlap with prev branch's last point.
+			auto target_point = VEC3(ret_tree[parent_id - 1].x,
+				ret_tree[parent_id - 1].y, ret_tree[parent_id - 1].z);
+			auto transform = target_point - start_point;
+
+			// From second point.
+			for (std::size_t i = 1; i < temp.size(); i++)
+			{
+				auto& point = temp[i] + transform;
+				ret_tree.push_back({ cur_id, node.type,
+					point.x, point.y, point.z, node.radius,  parent_id });
+				parent_id = cur_id++;
+			}
+			node_last_id_map[node.id] = cur_id - 1;
 		}
 		else
 		{
-			auto param = CompactSplineNode(node);
-			ret_tree.push_back(param);
-		}
-	}
+			auto last_point = VEC3(node.params.XParams.x,
+				node.params.YParams.x, node.params.ZParams.x
+			);
+			auto last_tangent = VEC3(node.params.XParams.z,
+				node.params.YParams.z, node.params.ZParams.z
+			);
+			for (int i = 0; i < node.param_size; i++)
+			{
+				auto param_point = node.param_sequences[i].position;
+				/*VEC3 tangent = VEC3(
+					tan(GetRadian(node.param_sequences[i].angle_int_x)),
+					tan(GetRadian(node.param_sequences[i].angle_int_y)),
+					tan(GetRadian(node.param_sequences[i].angle_int_z))
+				);*/
+				VEC3 tangent = VEC3(
+					node.param_sequences[i].angle_int_x,
+					node.param_sequences[i].angle_int_y,
+					node.param_sequences[i].angle_int_z
+				);
 
-	// Collect soma_branches.
-	for (auto& node : sb_vec)
-	{
-		ret_tree.push_back(node);
+				NCSplineCurve::SCParams p;
+				p.XParams = VEC4(last_point.x, param_point.x, last_tangent.x, tangent.x);
+				p.YParams = VEC4(last_point.y, param_point.y, last_tangent.y, tangent.y);
+				p.ZParams = VEC4(last_point.z, param_point.z, last_tangent.z, tangent.z);
+
+				Branch temp;
+
+				auto length = param_point.SqrDistance(last_point);
+				if (length > 0.f) length = std::sqrt(length);
+				else length = 0.f;
+				auto sample_num = static_cast<int>(
+					length / GlobalSetting::GetSamplePointStep());
+				sample_num = std::max(sample_num, 3);
+				NCSplineCurve::RemakeCurve(p, temp, sample_num);
+
+				// Move.
+				auto& start_point = temp[0];// Start point overlap with prev branch's last point.
+				auto target_point = VEC3(ret_tree[parent_id - 1].x,
+					ret_tree[parent_id - 1].y, ret_tree[parent_id - 1].z);
+				auto transform = target_point - start_point;
+
+				// From second point.
+				for (std::size_t j = 1; j < temp.size(); j++)
+				{
+					auto& point = temp[j] + transform;
+					ret_tree.push_back({ cur_id, node.type,
+						point.x, point.y, point.z, node.radius,  parent_id });
+					parent_id = cur_id++;
+				}
+
+				last_point = param_point;
+				last_tangent = tangent;
+			}
+			
+			/////////////////////////
+			// For last branch.
+			NCSplineCurve::SCParams p = node.params;
+			p.XParams.x = last_point.x; 
+			p.YParams.x = last_point.y;
+			p.ZParams.x = last_point.z;
+
+			p.XParams.z = last_tangent.x;
+			p.YParams.z = last_tangent.y;
+			p.ZParams.z = last_tangent.z;
+
+			Branch temp;
+			VEC3 point = VEC3(node.params.XParams.y,
+				node.params.YParams.y,
+				node.params.ZParams.y
+				);
+			auto length = point.SqrDistance(last_point);
+			if (length >= 0.0) length = std::sqrt(length);
+			else length = 0.0;
+			auto sample_num = static_cast<int>(
+				length / GlobalSetting::GetSamplePointStep());
+			sample_num = std::max(sample_num, 3);
+			NCSplineCurve::RemakeCurve(p, temp, sample_num);
+
+			// Move.
+			auto& start_point = temp[0];// Start point overlap with prev branch's last point.
+			auto target_point = VEC3(ret_tree[parent_id - 1].x,
+				ret_tree[parent_id - 1].y, ret_tree[parent_id - 1].z);
+			auto transform = target_point - start_point;
+
+			// From second point.
+			for (std::size_t i = 1; i < temp.size(); i++)
+			{
+				auto& point = temp[i] + transform;
+				ret_tree.push_back({ cur_id, node.type,
+					point.x, point.y, point.z, node.radius,  parent_id });
+				parent_id = cur_id++;
+			}
+
+			node_last_id_map[node.id] = cur_id - 1;
+		}
+		
 	}
 
 	return ret_tree;
 }
 
-NCNeuron::NeuronSplineTree NCNeuron::UnCompactSplineTree(const NeuronCompactSplineTree& tree)
-{
-	auto ret_tree = NCNeuron::NeuronSplineTree();
-	for (auto& node : tree)
-	{
-		if (node.p_id == -1) {
-			continue;
-		}
-
-		ret_tree.push_back({
-			node.id, 
-			tree.at(node.p_id).p_id==-1 ? -1 : node.p_id,
-			node.type, node.radius,
-			CompactSplineNode::UnCompactSplineParam(node.params, tree.at(node.p_id).params)
-			});
-	}
-
-	return ret_tree;
-}
