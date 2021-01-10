@@ -6,7 +6,6 @@ void NCSplineCurve::FitCurve(const NCNeuron::Branch& branch, SCParams& ret_param
 {
 	// Fit a curve without last point.
 	NCNeuron::Branch nb(branch);
-	nb.MoveToO();
 
 	auto N = nb.size();
 	if (N < 2) std::cout << "Too Small" << std::endl;
@@ -46,17 +45,6 @@ void NCSplineCurve::RemakeCurve(const SCParams& param, NCNeuron::Branch& ret_bra
 	{
 		float t = static_cast<float>(i) / static_cast<float>(node_num - 1);
 
-		//float t2 = pow(t, 2);
-		//float t3 = pow(t, 3);
-
-		//float h1 = 2 * t3 - 3 * t2 + 1;          // calculate basis function 1
-		//float h2 = -2 * t3 + 3 * t2;              // calculate basis function 2
-		//float h3 = t3 - 2 * t2 + t;         // calculate basis function 3
-		//float h4 = t3 - t2;              // calculate basis function 4
-
-		//float y = VEC4(h1, h2, h3, h4) * param.YParams;
-		//float z = VEC4(h1, h2, h3, h4) * param.ZParams;
-
 		auto qx = hermite * param.XParams;
 		auto x = qx.x * (t * t * t) + qx.y * (t * t) + qx.z * t + qx.w;
 
@@ -74,7 +62,7 @@ NCSplineCurve::ErrorUnit NCSplineCurve::CurveError(const NCNeuron::Branch& branc
 	const SCParams& param)
 {
 	NCNeuron::Branch nb(branch);
-	nb.MoveToO();
+	//nb.MoveToO();
 
 	auto N = nb.size();
 	NCNeuron::Branch curve_b;

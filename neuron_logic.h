@@ -89,12 +89,6 @@ namespace NCNeuron
 	// From a spline-node vector get a neuronTree.
 	NeuronTree GetNeuronTree(NeuronSplineTree& tree);
 
-	// From a branch tree get a compact spline-node vector.
-	NCNeuron::NeuronCompactSplineTree GetCompactSplineTree(
-		NCNeuron::BranchTree<NCNeuron::NodeParam::COMPACTSPLINE>* tree);
-	// From a compact spline-node vector get a neuronTree.
-	NeuronTree GetNeuronTree(NCNeuron::NeuronCompactSplineTree& tree);
-
 }
 
 #endif // !__NC_NEURON_LOGIC_H__

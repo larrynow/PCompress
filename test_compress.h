@@ -17,9 +17,10 @@ namespace NCTest
 		{
 			using namespace NCNeuron;
 
-			int compress_level = 3;
+			int compress_level = 2;
 
-			std::string neuron_name = "AA0029.swc_rep";
+			//std::string neuron_name = "AA0029.swc_rep";
+			std::string neuron_name = "AA0249.swc_rep";
 			//std::string neuron_name = "Cell-16-2_1.CNG";
 			std::string neuron_file(".//neurons//"+neuron_name+".swc");
 			NeuronCompressor::Compress(neuron_file, compress_level);
@@ -29,14 +30,14 @@ namespace NCTest
 			try
 			{
 				nt = NeuronCompressor::Decompress(".//neurons//"
-					+neuron_name+".ncc");
+					+neuron_name+".nsc");
 			}
 			catch (NCFileIO::BadFilePathException& e)
 			{
 				std::cout << "File error!" << e.what()<< std::endl;
 				return;
 			}
-			SaveSWC(*nt, ".//neurons//"+neuron_name+"_new3.swc");
+			SaveSWC(*nt, ".//neurons//"+neuron_name+"_new2.swc");
 			delete nt;
 		}
 

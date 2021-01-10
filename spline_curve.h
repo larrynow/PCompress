@@ -14,6 +14,26 @@ namespace NCSplineCurve
 		NCMath::VEC4 XParams;
 		NCMath::VEC4 YParams;
 		NCMath::VEC4 ZParams;
+
+		VEC3 GetStartPoint()
+		{
+			return VEC3(XParams.x, YParams.x, ZParams.x);
+		}
+
+		VEC3 GetEndPoint()
+		{
+			return VEC3(XParams.y, YParams.y, ZParams.y);
+		}
+
+		VEC3 GetStartTangent()
+		{
+			return VEC3(XParams.z, YParams.z, ZParams.z);
+		}
+
+		VEC3 GetEndTangent()
+		{
+			return VEC3(XParams.w, YParams.w, ZParams.w);
+		}
 	};
 
 	inline float GetBranchLength(const SCParams& p)

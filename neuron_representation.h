@@ -42,45 +42,6 @@ namespace NCNeuron
 	// A vector for spline nodes.
 	using NeuronSplineTree = std::vector<NeuronSplineNode>;
 
-	// A compact expression of spline params.
-	struct CompactSplineNode : public NeuronSplineNode
-	{
-		CompactSplineNode() : NeuronSplineNode(),
-			param_size(0), param_sequences(nullptr) {}
-
-		CompactSplineNode(int id, int p_id, int type, float radius,
-			NCSplineCurve::SCParams params,
-			int p_size, BranchCompactSplineNode::CompactParam* p_sequences) : 
-			NeuronSplineNode(id, p_id, type, radius, params), 
-			param_size(p_size), param_sequences(nullptr)
-		{
-			if (param_size != 0)
-			{
-				param_sequences =
-					new BranchCompactSplineNode::CompactParam[param_size];
-				memcpy(param_sequences, p_sequences, 
-					param_size*sizeof(BranchCompactSplineNode::CompactParam));
-			}
-		};
-
-		CompactSplineNode(const CompactSplineNode& node) :
-			CompactSplineNode(node.id, node.p_id, node.type, node.radius,
-				node.params, node.param_size, node.param_sequences) {}
-
-		~CompactSplineNode()
-		{
-			if (param_sequences) {
-				delete[] param_sequences;
-				param_sequences = nullptr;
-			}
-		}
-
-		int param_size;
-		BranchCompactSplineNode::CompactParam* param_sequences;
-	};
-
-	using NeuronCompactSplineTree = std::vector<CompactSplineNode>;
-
 	class NeuronDescriptor
 	{
 	public:
@@ -105,12 +66,6 @@ namespace NCNeuron
 		{
 			return GetInstance().neuron_spline_desc;
 		}
-
-		static Desc& GetCompactParamDescriptor()
-		{
-			return GetInstance().compact_param_desc;
-		}
-
 
 	private:
 		NeuronDescriptor()
@@ -156,35 +111,10 @@ namespace NCNeuron
 			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramZ.z", offsetof(NeuronSplineNode, params.ZParams.z)));
 			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramZ.w", offsetof(NeuronSplineNode, params.ZParams.w)));
 
-			/*
-			struct CompactParam
-			{
-				VEC3 position;
-
-				int angle_int_x;// A angle to get a tangent.
-				int angle_int_y;// A angle to get a tangent.
-				int angle_int_z;// A angle to get a tangent.
-			};
-			*/
-			compact_param_desc.clear();
-			compact_param_desc.push_back(new FieldDesc(DataType::FLOAT, "position.x", 
-				offsetof(BranchCompactSplineNode::CompactParam, position.x)));
-			compact_param_desc.push_back(new FieldDesc(DataType::FLOAT, "position.y",
-				offsetof(BranchCompactSplineNode::CompactParam, position.y)));
-			compact_param_desc.push_back(new FieldDesc(DataType::FLOAT, "position.z",
-				offsetof(BranchCompactSplineNode::CompactParam, position.z)));
-			
-			compact_param_desc.push_back(new FieldDesc(DataType::FLOAT, "angle_x", 
-				offsetof(BranchCompactSplineNode::CompactParam, angle_int_x)));
-			compact_param_desc.push_back(new FieldDesc(DataType::FLOAT, "angle_y",
-				offsetof(BranchCompactSplineNode::CompactParam, angle_int_y)));
-			compact_param_desc.push_back(new FieldDesc(DataType::FLOAT, "angle_z",
-				offsetof(BranchCompactSplineNode::CompactParam, angle_int_z)));
 		}
 	
 		Desc neuron_SWC_desc;
 		Desc neuron_spline_desc;
-		Desc compact_param_desc;
 	};
 
 }

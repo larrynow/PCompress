@@ -30,7 +30,7 @@ public:
 
 	static float& GetCurveThreshold()
 	{
-		static float threshold = 10.f;// Curve error threshold.
+		static float threshold = 20.f;// Curve error threshold.
 		return threshold;
 	}
 
