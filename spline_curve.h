@@ -15,22 +15,22 @@ namespace NCSplineCurve
 		NCMath::VEC4 YParams;
 		NCMath::VEC4 ZParams;
 
-		VEC3 GetStartPoint()
+		VEC3 GetStartPoint() const
 		{
 			return VEC3(XParams.x, YParams.x, ZParams.x);
 		}
 
-		VEC3 GetEndPoint()
+		VEC3 GetEndPoint() const
 		{
 			return VEC3(XParams.y, YParams.y, ZParams.y);
 		}
 
-		VEC3 GetStartTangent()
+		VEC3 GetStartTangent() const
 		{
 			return VEC3(XParams.z, YParams.z, ZParams.z);
 		}
 
-		VEC3 GetEndTangent()
+		VEC3 GetEndTangent() const
 		{
 			return VEC3(XParams.w, YParams.w, ZParams.w);
 		}

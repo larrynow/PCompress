@@ -42,6 +42,56 @@ namespace NCNeuron
 	// A vector for spline nodes.
 	using NeuronSplineTree = std::vector<NeuronSplineNode>;
 
+	// A compact expresion of neuron tree.
+	struct CompactNeuronTree
+	{
+		CompactNeuronTree(int s) : sub_trees(s) {}
+
+		VEC3 soma_point;
+
+		struct CompactParam
+		{
+			VEC3 end_point;
+			int start_tangent_angle_x;
+			int start_tangent_angle_y;
+			int start_tangent_angle_z;
+			int end_tangent_angle_x;
+			int end_tangent_angle_y;
+			int end_tangent_angle_z;
+		};
+
+		struct CompactSplineNode
+		{
+			int id;
+			int pid;
+			float radius;
+
+			CompactParam params;
+		};
+
+		struct Subtree
+		{
+			int type;
+			std::vector<CompactSplineNode> nodes;
+		};
+
+		std::vector<Subtree> sub_trees;
+
+		static CompactParam CompactAParam(
+			const NCSplineCurve::SCParams& p)
+		{
+			return CompactParam({
+				p.GetEndPoint(),
+				GetAngle(atan(p.GetStartTangent().x)), 
+				GetAngle(atan(p.GetStartTangent().y)),
+				GetAngle(atan(p.GetStartTangent().z)),
+				GetAngle(atan(p.GetEndTangent().x)),
+				GetAngle(atan(p.GetEndTangent().y)),
+				GetAngle(atan(p.GetEndTangent().z)),
+				});
+		};
+	};
+
 	class NeuronDescriptor
 	{
 	public:

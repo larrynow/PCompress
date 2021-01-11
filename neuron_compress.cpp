@@ -69,13 +69,6 @@ void NCNeuron::NeuronCompressor::Level2Compress(const NeuronTree& neuron, const 
 	auto b_tree = GetBranchTree<NCNeuron::NodeParam::SPLINE>(neuron);
 	FitBranchTree(b_tree);
 	auto tree = GetSplineTree(b_tree);
-	/*for (auto& n : tree)
-	{
-		Log("Node");
-		Log(n.params.XParams);
-		Log(n.params.YParams);
-		Log(n.params.ZParams);
-	}*/
 	delete b_tree;
 
 	////Code to test int tangent-representation.
@@ -116,5 +109,21 @@ void NCNeuron::NeuronCompressor::Level2Compress(const NeuronTree& neuron, const 
 	delete encoder;
 
 	std::cout << "Encode finish." << std::endl;
+
+}
+
+void NCNeuron::NeuronCompressor::Level3Compress(const NeuronTree& neuron, const std::string& out_file)
+{
+	using namespace NCFileIO;
+
+	ClearFile(out_file);
+	Encoder* encoder = new Encoder(out_file);
+
+	// Get Spline tree.
+	auto b_tree = GetBranchTree<NCNeuron::NodeParam::SPLINE>(neuron);
+	FitBranchTree(b_tree);
+	auto tree = CompactBranchSplineTree(b_tree);
+	delete b_tree;
+
 
 }

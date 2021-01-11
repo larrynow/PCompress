@@ -201,3 +201,46 @@ NCNeuron::NeuronTree NCNeuron::GetNeuronTree(NeuronSplineTree& tree)
 
 	return ret_tree;
 }
+
+NCNeuron::CompactNeuronTree NCNeuron::CompactBranchSplineTree(
+	NCNeuron::BranchTree<NCNeuron::NodeParam::SPLINE>* branch_tree)
+{
+	CompactNeuronTree ret_tree(branch_tree->soma_branches.size());
+	for (int i = 0; i < branch_tree->soma_branches.size();i++)// Start from each soma-branch.
+	{
+		std::map<BranchSplineNode*, int> id_map;
+		int id = 0;
+		int pre_id = -1;// Soma.
+		std::stack<BranchSplineNode*> s;
+		auto cur = branch_tree->soma_branches[i];
+		if(!cur) continue;
+
+		ret_tree.soma_point = cur->params.GetStartPoint();
+		ret_tree.sub_trees[i].type = cur->type;
+
+		while (cur != nullptr || !s.empty())
+		{
+			while (cur != nullptr)
+			{
+				ret_tree.sub_trees[i].nodes.push_back({
+					id++, pre_id,
+					cur->radius, 
+					CompactNeuronTree::CompactAParam(cur->params) });
+				s.push(cur);
+				id_map[cur] = ret_tree.sub_trees[i].nodes.size() - 1;
+				pre_id = ret_tree.sub_trees[i].nodes.size() - 1;
+				cur = static_cast<BranchSplineNode*>(cur->l_child);
+			}
+			if (!s.empty())
+			{
+				BranchSplineNode* top = s.top();
+				pre_id = id_map.at(top);
+				s.pop();
+				cur = static_cast<BranchSplineNode*>(top->r_child);
+			}
+		}
+	}
+
+	return ret_tree;
+}
+
