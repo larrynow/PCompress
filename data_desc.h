@@ -65,6 +65,11 @@ namespace NCData
 			field_descs.clear();
 		}
 
+		bool empty() const
+		{
+			return field_descs.size() == 0;
+		}
+
 	private:
 		std::vector<FieldDesc*> field_descs;
 	};

@@ -1,6 +1,7 @@
 #include "parser_impl.h"
 #include "file_io.h"
 #include "tag_logic.h"
+#include "utils.h"
 
 using namespace NCData;
 
@@ -19,7 +20,11 @@ bool NCFileIO::ParserImpl::Parse(Desc* p_descriptor, Byte* target)
 		double d;
 		char c;
 	};*/
-
+	if (!p_descriptor || p_descriptor->empty())
+	{
+		Log("Decriptor empty! Stop Parsing.");
+		return false;
+	}
 	for (auto cur_field : *p_descriptor)
 	{
 		try
@@ -31,7 +36,7 @@ bool NCFileIO::ParserImpl::Parse(Desc* p_descriptor, Byte* target)
 			std::cout << TagSNException(e).what() << e.what() << std::endl;
 			std::cout << "Expect [" << e.ExpectSN << "] but got [" 
 				<< e.ActualSN <<"]" << std::endl;
-			break;//Terminate when SN is not matched.
+			return false;//Terminate when SN is not matched.
 		}
 		catch (TagFieldTypeException & e)
 		{

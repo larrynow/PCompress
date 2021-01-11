@@ -244,3 +244,78 @@ NCNeuron::CompactNeuronTree NCNeuron::CompactBranchSplineTree(
 	return ret_tree;
 }
 
+NCNeuron::NeuronTree NCNeuron::GetNeuronTree(CompactNeuronTree& tree)
+{
+	NeuronTree ret_tree;
+
+	int cur_id = 1;
+	int parent_id = -1;
+	// Put soma.
+	ret_tree.push_back({ cur_id++, 1, 
+		tree.soma_point.x, tree.soma_point.y, tree.soma_point.z, 1.f, parent_id });
+
+	for (auto& sub_tree : tree.sub_trees)
+	{
+		std::map<int, int> node_last_id_map;// Mark last sample-point-id of a node.
+
+		for (auto& node : sub_tree.nodes)
+		{
+			if (node.pid == -1) parent_id = 1;
+			else parent_id = node_last_id_map.at(node.pid);
+
+			NCSplineCurve::SCParams p;
+			// Curve start point.
+			if (node.pid != -1)
+			{
+				p.XParams.x = sub_tree.nodes.at(node.pid).params.end_point.x;
+				p.YParams.x = sub_tree.nodes.at(node.pid).params.end_point.y;
+				p.ZParams.x = sub_tree.nodes.at(node.pid).params.end_point.z;
+			}
+			else
+			{
+				p.XParams.x = tree.soma_point.x;
+				p.YParams.x = tree.soma_point.y;
+				p.ZParams.x = tree.soma_point.z;
+			}
+
+			// Curve end point.
+			p.XParams.y = node.params.end_point.x;
+			p.YParams.y = node.params.end_point.y;
+			p.ZParams.y = node.params.end_point.z;
+
+			auto TanRadian = [](int angle)
+			{
+				return tan(GetRadian(static_cast<float>(angle)));
+			};
+
+			// Curve start tangent.
+			p.XParams.z = TanRadian(node.params.start_tangent_angle_x);
+			p.YParams.z = TanRadian(node.params.start_tangent_angle_y);
+			p.ZParams.z = TanRadian(node.params.start_tangent_angle_z);
+
+			p.XParams.w = TanRadian(node.params.end_tangent_angle_x);
+			p.YParams.w = TanRadian(node.params.end_tangent_angle_y);
+			p.ZParams.w = TanRadian(node.params.end_tangent_angle_z);
+
+			Branch temp;
+			auto sample_num = static_cast<int>(
+				NCSplineCurve::GetBranchLength(p) / GlobalSetting::GetSamplePointStep());
+			sample_num = std::max(sample_num, 3);
+			NCSplineCurve::RemakeCurve(p, temp, sample_num);
+
+			// From second point.
+			for (std::size_t i = 1; i < temp.size(); i++)
+			{
+				auto& point = temp[i];
+				//auto& point = temp[i] + transform;
+				ret_tree.push_back({ cur_id, sub_tree.type,
+					point.x, point.y, point.z, node.radius,  parent_id });
+				parent_id = cur_id++;
+			}
+			node_last_id_map[node.id] = cur_id - 1;
+		}
+	}
+
+	return ret_tree;
+}
+

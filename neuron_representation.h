@@ -82,12 +82,12 @@ namespace NCNeuron
 		{
 			return CompactParam({
 				p.GetEndPoint(),
-				GetAngle(atan(p.GetStartTangent().x)), 
-				GetAngle(atan(p.GetStartTangent().y)),
-				GetAngle(atan(p.GetStartTangent().z)),
-				GetAngle(atan(p.GetEndTangent().x)),
-				GetAngle(atan(p.GetEndTangent().y)),
-				GetAngle(atan(p.GetEndTangent().z)),
+				static_cast<int>(GetAngle(atan(p.GetStartTangent().x))), 
+				static_cast<int>(GetAngle(atan(p.GetStartTangent().y))),
+				static_cast<int>(GetAngle(atan(p.GetStartTangent().z))),
+				static_cast<int>(GetAngle(atan(p.GetEndTangent().x))),
+				static_cast<int>(GetAngle(atan(p.GetEndTangent().y))),
+				static_cast<int>(GetAngle(atan(p.GetEndTangent().z))),
 				});
 		};
 	};
@@ -115,6 +115,11 @@ namespace NCNeuron
 		static Desc& GetSplineDescriptor()
 		{
 			return GetInstance().neuron_spline_desc;
+		}
+
+		static Desc& GetCompactSplineNodeDescriptor()
+		{
+			return GetInstance().compact_spline_node_desc;
 		}
 
 	private:
@@ -161,10 +166,37 @@ namespace NCNeuron
 			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramZ.z", offsetof(NeuronSplineNode, params.ZParams.z)));
 			neuron_spline_desc.push_back(new FieldDesc(DataType::FLOAT, "paramZ.w", offsetof(NeuronSplineNode, params.ZParams.w)));
 
+			/*
+			struct CompactSplineNode
+			{
+				int id;
+				int pid;
+				float radius;
+
+				CompactParam params;
+			};
+			*/
+			compact_spline_node_desc.clear();
+			compact_spline_node_desc.push_back(new FieldDesc(DataType::INT32, "id", offsetof(CompactNeuronTree::CompactSplineNode, id)));
+			compact_spline_node_desc.push_back(new FieldDesc(DataType::INT32, "pid", offsetof(CompactNeuronTree::CompactSplineNode, pid)));
+			compact_spline_node_desc.push_back(new FieldDesc(DataType::FLOAT, "radius", offsetof(CompactNeuronTree::CompactSplineNode, radius)));
+			
+			compact_spline_node_desc.push_back(new FieldDesc(DataType::FLOAT, "end_point.x", offsetof(CompactNeuronTree::CompactSplineNode, params.end_point.x)));
+			compact_spline_node_desc.push_back(new FieldDesc(DataType::FLOAT, "end_point.y", offsetof(CompactNeuronTree::CompactSplineNode, params.end_point.y)));
+			compact_spline_node_desc.push_back(new FieldDesc(DataType::FLOAT, "end_point.z", offsetof(CompactNeuronTree::CompactSplineNode, params.end_point.z)));
+
+			compact_spline_node_desc.push_back(new FieldDesc(DataType::INT32, "start_tangent_angle.x", offsetof(CompactNeuronTree::CompactSplineNode, params.start_tangent_angle_x)));
+			compact_spline_node_desc.push_back(new FieldDesc(DataType::INT32, "start_tangent_angle.y", offsetof(CompactNeuronTree::CompactSplineNode, params.start_tangent_angle_y)));
+			compact_spline_node_desc.push_back(new FieldDesc(DataType::INT32, "start_tangent_angle.z", offsetof(CompactNeuronTree::CompactSplineNode, params.start_tangent_angle_z)));
+
+			compact_spline_node_desc.push_back(new FieldDesc(DataType::INT32, "end_tangent_angle.x", offsetof(CompactNeuronTree::CompactSplineNode, params.end_tangent_angle_x)));
+			compact_spline_node_desc.push_back(new FieldDesc(DataType::INT32, "end_tangent_angle.y", offsetof(CompactNeuronTree::CompactSplineNode, params.end_tangent_angle_y)));
+			compact_spline_node_desc.push_back(new FieldDesc(DataType::INT32, "end_tangent_angle.z", offsetof(CompactNeuronTree::CompactSplineNode, params.end_tangent_angle_z)));
 		}
 	
 		Desc neuron_SWC_desc;
 		Desc neuron_spline_desc;
+		Desc compact_spline_node_desc;
 	};
 
 }

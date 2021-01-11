@@ -91,6 +91,9 @@ namespace NCNeuron
 
 	CompactNeuronTree CompactBranchSplineTree(
 		NCNeuron::BranchTree<NCNeuron::NodeParam::SPLINE>* branch_tree);
+
+	// From a compact tree.
+	NeuronTree GetNeuronTree(CompactNeuronTree& tree);
 }
 
 #endif // !__NC_NEURON_LOGIC_H__
