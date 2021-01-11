@@ -10,6 +10,7 @@ void NCNeuron::NeuronCompressor::Compress(const std::string& neuron_file, int le
 
 	if (!CheckFile(neuron_file))
 	{
+		Log("Bad File : [", neuron_file, "].");
 		throw BadFilePathException(neuron_file);
 	}
 	auto neuron = ReadSWC_File(neuron_file);

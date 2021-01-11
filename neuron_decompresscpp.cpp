@@ -18,7 +18,7 @@ NCNeuron::NeuronTree* NCNeuron::NeuronCompressor::Decompress(
 	{
 		if (auto ret_data = Level1Decompress(com_file))
 		{
-			std::cout << "Level 1 decompress from"<< com_file << std::endl;
+			std::cout << "Level 1 decompress from "<< com_file << std::endl;
 			return ret_data;
 		}
 	}
@@ -26,7 +26,7 @@ NCNeuron::NeuronTree* NCNeuron::NeuronCompressor::Decompress(
 	{
 		if (auto ret_data = Level2Decompress(com_file))
 		{
-			std::cout << "Level 2 decompress from" << com_file << std::endl;
+			std::cout << "Level 2 decompress from " << com_file << std::endl;
 			return ret_data;
 		}
 
@@ -35,7 +35,7 @@ NCNeuron::NeuronTree* NCNeuron::NeuronCompressor::Decompress(
 	{
 		if (auto ret_data = Level3Decompress(com_file))
 		{
-			std::cout << "Level 3 decompress from" << com_file << std::endl;
+			std::cout << "Level 3 decompress from " << com_file << std::endl;
 			return ret_data;
 		}
 
