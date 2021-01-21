@@ -25,8 +25,8 @@ int main(int argc, char* argv[])
 	descTest->Test();*/
 
 	// Encoder test.
-	/*auto encoderTest = new TestEncoder();
-	encoderTest->Test();*/
+	auto encoderTest = new TestEncoder();
+	encoderTest->Test();
 
 	// Parser test.
 	/*auto parseTest = new TestParser();

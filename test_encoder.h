@@ -89,7 +89,7 @@ namespace NCTest
 
 			testSample({ 666, 777, 3.14f, true, 2.23343499, 'x' }, 2);
 			testSample({ INT_MAX, UINT_MAX, 3.14f, true, 2.23343499, 'x' }, 4);
-			testSample({ -100, 0, 3.14f, true, 2.23343499, 'x' }, 4);
+			testSample({ -64, 0, 3.14f, true, 2.23343499, 'x' }, 4);
 			testSample({ INT_MIN, 1, 3.14f, true, 2.23343499, 'x' }, 4);
 		}
 	};
